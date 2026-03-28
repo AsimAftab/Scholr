@@ -21,7 +21,7 @@ class MatchingService:
                     scholarship_id=scholarship.id,
                     title=scholarship.title,
                     country=scholarship.country,
-                    deadline=scholarship.deadline.isoformat(),
+                    deadline=scholarship.deadline.isoformat() if scholarship.deadline else None,
                     match_score=score,
                     missing_requirements=missing,
                     summary=self.ai.summarize_scholarship(scholarship),
@@ -38,7 +38,9 @@ class MatchingService:
         if scholarship.country.lower() == profile.target_country.lower():
             score += 30
 
-        if scholarship.degree.lower() == profile.degree.lower():
+        degree_levels = structured.get("degree_levels") or []
+        degree_candidates = [scholarship.degree, *degree_levels]
+        if any(candidate.lower() == profile.degree_level.lower() for candidate in degree_candidates if candidate):
             score += 20
         else:
             missing.append(f"Degree preference differs: {scholarship.degree}")

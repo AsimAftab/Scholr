@@ -12,9 +12,8 @@ import { Profile } from "@/lib/types";
 const defaultProfile: Profile = {
   country: "",
   target_country: "",
-  degree: "",
-  major: "",
-  passout_year: new Date().getFullYear(),
+  degree_level: "Masters",
+  field_of_study: "",
   gpa: 0,
   ielts_score: 0,
 };
@@ -55,7 +54,7 @@ export default function ProfilePage() {
     <AppShell
       user={user}
       onLogout={handleLogout}
-      title="Academic Profile"
+      title="Profile Setup"
       subtitle="Keep your profile up to date to get the most accurate scholarship match scores."
     >
       <div className="mx-auto max-w-3xl space-y-8">

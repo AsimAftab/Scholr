@@ -122,11 +122,15 @@ Main settings:
 - `SESSION_COOKIE_NAME`
 - `SESSION_COOKIE_SECURE`
 - `AUTO_SEED`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_FULL_NAME`
 
 ## Runtime Notes
 
 - Docker backend runs `alembic upgrade head` before starting Uvicorn.
 - `AUTO_SEED=true` is intended for local development only.
+- `ADMIN_EMAIL` and `ADMIN_PASSWORD` can be set to bootstrap an admin account on startup.
 - `/health` is lightweight.
 - `/ready` checks DB readiness.
 
@@ -146,4 +150,3 @@ Main settings:
 3. session hardening and CSRF strategy
 4. role model and admin endpoints
 5. async jobs for crawler and AI workloads
-

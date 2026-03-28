@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const { user, loading, handleLogout } = useAuthContext();
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,8 +35,29 @@ export default function SettingsPage() {
   // so we'll mock the saving action to provide the UI the user requested.
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
+
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const newPassword = formData.get("newPassword") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    // Clear previous messages
     setSuccessMessage("");
+    setErrorMessage("");
+
+    // Validate password match if either field is filled
+    if (newPassword || confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setErrorMessage("Passwords do not match.");
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        setErrorMessage("Password must be at least 8 characters long.");
+        return;
+      }
+    }
+
+    setSaving(true);
     setTimeout(() => {
       setSaving(false);
       setSuccessMessage("Settings updated successfully.");
@@ -54,6 +76,11 @@ export default function SettingsPage() {
           {successMessage && (
             <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800">
               {successMessage}
+            </div>
+          )}
+          {errorMessage && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
+              {errorMessage}
             </div>
           )}
 
@@ -101,6 +128,9 @@ export default function SettingsPage() {
                 <span>New Password</span>
                 <input
                   type="password"
+                  name="newPassword"
+                  minLength={8}
+                  autoComplete="new-password"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   placeholder="••••••••"
                 />
@@ -110,6 +140,9 @@ export default function SettingsPage() {
                 <span>Confirm New Password</span>
                 <input
                   type="password"
+                  name="confirmPassword"
+                  minLength={8}
+                  autoComplete="new-password"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   placeholder="••••••••"
                 />

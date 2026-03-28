@@ -1,4 +1,4 @@
-import { Match, Profile, Scholarship, User } from "@/lib/types";
+import { AdminJob, AdminOverview, AdminSource, Match, Profile, Scholarship, User } from "@/lib/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -90,4 +90,37 @@ export async function me(): Promise<User | null> {
     throw new Error(`Request failed: ${response.status}`);
   }
   return response.json() as Promise<User>;
+}
+
+export async function getAdminOverview(): Promise<AdminOverview> {
+  return request<AdminOverview>("/admin/overview");
+}
+
+export async function getAdminSources(): Promise<AdminSource[]> {
+  return request<AdminSource[]>("/admin/sources");
+}
+
+export async function getAdminJobs(): Promise<AdminJob[]> {
+  return request<AdminJob[]>("/admin/crawl-jobs");
+}
+
+export async function createAdminCrawlJob(payload: {
+  source_key?: string;
+  country_filter?: string;
+  region_filter?: string;
+}): Promise<AdminJob> {
+  return request<AdminJob>("/admin/crawl-jobs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createAdminRematchJob(payload: {
+  user_id?: number;
+  all_users: boolean;
+}): Promise<AdminJob> {
+  return request<AdminJob>("/admin/rematch-jobs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { User } from "@/lib/types";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type AppShellProps = {
   user: User;
@@ -13,15 +15,36 @@ type AppShellProps = {
   children: React.ReactNode;
 };
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", meta: "Overview" },
-  { href: "/scholarships", label: "Scholarships", meta: "Matches" },
-  { href: "/profile", label: "Profile", meta: "Academic info" },
-  { href: "/settings", label: "Settings", meta: "Account" },
-];
-
 export function AppShell({ user, title, subtitle, onLogout, children }: AppShellProps) {
   const pathname = usePathname();
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const navItems =
+    user.role === "admin"
+      ? [
+          { href: "/dashboard", label: "Dashboard", meta: "Overview" },
+          { href: "/scholarships", label: "All Scholarships", meta: "Catalog" },
+          { href: "/admin", label: "Operations", meta: "Ingestion" },
+          { href: "/settings", label: "Settings", meta: "Account" },
+        ]
+      : [
+          { href: "/dashboard", label: "Dashboard", meta: "Overview" },
+          { href: "/scholarships", label: "Scholarships", meta: "Matches" },
+          { href: "/profile", label: "Profile Setup", meta: "Academic info" },
+          { href: "/settings", label: "Settings", meta: "Account" },
+        ];
+
+  const handleLogoutClick = () => {
+    setIsLogoutDialogOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setIsLogoutDialogOpen(false);
+    await onLogout();
+  };
+
+  const handleLogoutCancel = () => {
+    setIsLogoutDialogOpen(false);
+  };
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
@@ -34,6 +57,9 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-300">Account</p>
           <p className="mt-3 text-lg font-semibold text-white">{user.full_name}</p>
           <p className="mt-1 text-sm text-zinc-200">{user.email}</p>
+          <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-zinc-100">
+            {user.role}
+          </p>
         </div>
 
         <nav className="mt-8 space-y-2">
@@ -64,7 +90,7 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
 
         <button
           type="button"
-          onClick={() => void onLogout()}
+          onClick={handleLogoutClick}
           className="mt-8 w-full rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
         >
           Log out
@@ -80,6 +106,16 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
 
         <main className="px-6 py-8 md:px-10">{children}</main>
       </div>
+
+      <ConfirmDialog
+        isOpen={isLogoutDialogOpen}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Log out"
+        cancelLabel="Cancel"
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 }

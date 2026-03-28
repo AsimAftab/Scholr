@@ -19,7 +19,9 @@ class AIService:
 
         prompt = (
             "Convert the scholarship eligibility text into JSON with keys "
-            "gpa_required, ielts_required, documents_required, degree_levels, countries_allowed. "
+            "gpa_required, ielts_required, documents_required, degree_levels, countries_allowed, "
+            "fields_of_study, programs, funding_type, fully_funded, benefits, application_requirements, "
+            "eligible_nationalities_summary. "
             "Return only valid JSON.\n\n"
             f"Eligibility text:\n{eligibility_text}"
         )
@@ -28,9 +30,12 @@ class AIService:
 
     def generate_sop(self, profile: ProfileRead, scholarship: Scholarship) -> str:
         if self.client is None:
+            field_fragment = (
+                f" in {profile.field_of_study}" if profile.field_of_study else ""
+            )
             return (
                 f"I am applying for the {scholarship.title} in {scholarship.country} to pursue a "
-                f"{profile.degree}. My academic profile includes a GPA of {profile.gpa} and IELTS "
+                f"{profile.degree_level}{field_fragment}. My academic profile includes a GPA of {profile.gpa} and IELTS "
                 f"score of {profile.ielts_score}. This scholarship aligns with my goal to study in "
                 f"{profile.target_country} and contribute meaningfully after graduation."
             )
@@ -61,7 +66,8 @@ class AIService:
             docs = docs or "standard academic documents"
             return (
                 f"{scholarship.title} supports {scholarship.degree} study in {scholarship.country}. "
-                f"Deadline: {scholarship.deadline.isoformat()}. Required documents include {docs}."
+                f"Deadline: {scholarship.deadline.isoformat() if scholarship.deadline else 'not published'}. "
+                f"Required documents include {docs}."
             )
         prompt = (
             "Summarize this scholarship for a student dashboard in 2 sentences.\n"
@@ -88,5 +94,11 @@ class AIService:
             documents_required=documents_required or ["SOP", "LOR", "CV"],
             degree_levels=degree_levels,
             countries_allowed=countries_allowed,
+            fields_of_study=[],
+            programs=[],
+            funding_type=None,
+            fully_funded=None,
+            benefits=[],
+            application_requirements=[],
+            eligible_nationalities_summary=None,
         )
-

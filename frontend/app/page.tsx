@@ -56,7 +56,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-6 inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
             <span className="mr-2 flex h-2 w-2 rounded-full bg-zinc-900"></span>
-            Scholarship operating system
+            Your personal scholarship engine.
           </div>
           <h1 className="text-5xl font-extrabold tracking-tight text-zinc-950 md:text-7xl lg:text-[5rem] lg:leading-[1.1]">
             Discover scholarships with structure.

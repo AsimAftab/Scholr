@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_admin_user, get_current_user
 from app.db.session import get_db
+from app.models.admin import CrawlJob
 from app.models.user import User
+from app.schemas.admin import AdminOverview, CrawlJobCreate, CrawlJobRead, RematchJobCreate, ScholarshipSourceConfigRead
 from app.schemas.ai import ScholarshipActionRequest, StructuredEligibilityResponse, StructureEligibilityRequest
 from app.schemas.auth import AuthResponse, UserLogin, UserRead, UserSignup
 from app.schemas.match import MatchResponse
 from app.schemas.profile import ProfileCreate, ProfileRead
 from app.schemas.scholarship import ScholarshipRead
+from app.services.admin_service import AdminService
 from app.services.ai_service import AIService
 from app.services.auth_service import AuthService
 from app.services.matching import MatchingService
@@ -115,3 +118,48 @@ def summarize_scholarship(
 @router.post("/scholarships/structure", response_model=StructuredEligibilityResponse)
 def structure_eligibility(payload: StructureEligibilityRequest) -> StructuredEligibilityResponse:
     return AIService().structure_eligibility(payload.eligibility_text)
+
+
+@router.get("/admin/overview", response_model=AdminOverview)
+def admin_overview(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+) -> AdminOverview:
+    return AdminService(db).get_overview()
+
+
+@router.get("/admin/sources", response_model=list[ScholarshipSourceConfigRead])
+def admin_sources(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+) -> list[ScholarshipSourceConfigRead]:
+    return AdminService(db).list_sources()
+
+
+@router.get("/admin/crawl-jobs", response_model=list[CrawlJobRead])
+def admin_list_jobs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+) -> list[CrawlJob]:
+    return AdminService(db).list_jobs()
+
+
+@router.post("/admin/crawl-jobs", response_model=CrawlJobRead)
+def admin_create_crawl_job(
+    payload: CrawlJobCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+) -> CrawlJob:
+    return AdminService(db).create_crawl_job(current_user, payload)
+
+
+@router.post("/admin/rematch-jobs", response_model=CrawlJobRead)
+def admin_create_rematch_job(
+    payload: RematchJobCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+) -> CrawlJob:
+    try:
+        return AdminService(db).create_rematch_job(current_user, payload)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error

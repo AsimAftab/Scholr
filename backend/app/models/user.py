@@ -11,6 +11,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String(255))
     hashed_password: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(50), default="user", index=True)
     profile_id: Mapped[int | None] = mapped_column(ForeignKey("profiles.id"), nullable=True, unique=True)
 
     profile = relationship("Profile", lazy="joined")

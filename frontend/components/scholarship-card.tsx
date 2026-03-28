@@ -13,6 +13,7 @@ type ScholarshipCardProps = {
 export function ScholarshipCard({ match, profile }: ScholarshipCardProps) {
   const [sop, setSop] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const deadlineLabel = match.deadline ? new Date(match.deadline).toLocaleDateString() : "Not published";
 
   return (
     <article className="rounded-xl border border-zinc-900/8 bg-white/90 p-6 shadow-md backdrop-blur-xl">
@@ -42,7 +43,7 @@ export function ScholarshipCard({ match, profile }: ScholarshipCardProps) {
       </div>
 
       <div className="mt-5 flex items-center justify-between gap-4">
-        <p className="text-sm text-zinc-500">Deadline: {new Date(match.deadline).toLocaleDateString()}</p>
+        <p className="text-sm text-zinc-500">Deadline: {deadlineLabel}</p>
         <button
           type="button"
           disabled={loading}

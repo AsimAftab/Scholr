@@ -143,11 +143,46 @@ See `backend/.env.example`.
 - `LOG_LEVEL`
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL`
+- `TINYFISH_API_KEY`
+- `TINYFISH_BASE_URL`
+- `TINYFISH_TIMEOUT_SECONDS`
+- `TINYFISH_POLL_INTERVAL_SECONDS`
+- `TINYFISH_BATCH_SIZE`
 - `CORS_ORIGINS`
 - `SESSION_SECRET`
 - `SESSION_COOKIE_NAME`
 - `SESSION_COOKIE_SECURE`
 - `AUTO_SEED`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_FULL_NAME`
+
+## Admin Bootstrap
+
+To bootstrap an admin user, set these backend environment variables before starting the API:
+
+```env
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-this-now
+ADMIN_FULL_NAME=Platform Admin
+```
+
+On startup, the backend will create that user if it does not exist and ensure the account has `role=admin`.
+Login uses the normal sign-in flow with `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+
+## TinyFish Ingestion
+
+Production ingestion now uses TinyFish source by source. Configure these backend variables before triggering admin ingestion jobs:
+
+```env
+TINYFISH_API_KEY=your-api-key
+TINYFISH_BASE_URL=https://agent.tinyfish.ai
+TINYFISH_TIMEOUT_SECONDS=180
+TINYFISH_POLL_INTERVAL_SECONDS=5
+TINYFISH_BATCH_SIZE=5
+```
+
+The backend submits TinyFish runs in small async batches, polls them with batch run lookup, and upserts normalized scholarship records into the global `scholarships` table.
 
 ### Frontend
 
@@ -190,7 +225,7 @@ Health endpoints:
 - Auth state persists across route changes without page refreshes for smooth navigation.
 - The matching engine is deterministic first, then enriches missing requirement reasoning.
 - AI services degrade gracefully to deterministic mock outputs if `OPENAI_API_KEY` is absent.
-- The crawler outputs normalized scholarship objects ready for insertion or API ingestion.
+- The ingestion runner uses TinyFish source by source and stores raw extraction payloads beside normalized scholarship fields.
 - Request IDs and API logging are handled centrally.
 - Errors are normalized into a consistent `{ detail, request_id }` shape.
 

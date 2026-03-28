@@ -17,11 +17,19 @@ class Settings(BaseSettings):
     database_url: str = Field(alias="DATABASE_URL")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4.1-mini", alias="OPENAI_MODEL")
+    tinyfish_api_key: str | None = Field(default=None, alias="TINYFISH_API_KEY")
+    tinyfish_base_url: str = Field(default="https://agent.tinyfish.ai", alias="TINYFISH_BASE_URL")
+    tinyfish_timeout_seconds: int = Field(default=180, alias="TINYFISH_TIMEOUT_SECONDS")
+    tinyfish_poll_interval_seconds: int = Field(default=5, alias="TINYFISH_POLL_INTERVAL_SECONDS")
+    tinyfish_batch_size: int = Field(default=5, alias="TINYFISH_BATCH_SIZE")
     cors_origins_raw: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
     session_secret: str = Field(alias="SESSION_SECRET")
     session_cookie_name: str = Field(default="scholr_session", alias="SESSION_COOKIE_NAME")
     session_cookie_secure: bool = Field(default=False, alias="SESSION_COOKIE_SECURE")
     auto_seed: bool = Field(default=False, alias="AUTO_SEED")
+    admin_email: str | None = Field(default=None, alias="ADMIN_EMAIL")
+    admin_password: str | None = Field(default=None, alias="ADMIN_PASSWORD")
+    admin_full_name: str = Field(default="Scholr Admin", alias="ADMIN_FULL_NAME")
 
     @property
     def is_production(self) -> bool:
