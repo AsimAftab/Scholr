@@ -13,6 +13,7 @@ import {
   getAdminSources,
 } from "@/lib/api";
 import { AdminJob, AdminOverview, AdminSource } from "@/lib/types";
+import { COUNTRIES } from "@/lib/countries";
 
 const emptyOverview: AdminOverview = {
   total_sources: 0,
@@ -23,6 +24,9 @@ const emptyOverview: AdminOverview = {
   completed_jobs: 0,
   failed_jobs: 0,
   total_match_snapshots: 0,
+  total_users: 0,
+  total_scholarships: 0,
+  last_ingestion_at: null,
 };
 
 export default function AdminPage() {
@@ -108,17 +112,23 @@ export default function AdminPage() {
       <div className="space-y-8">
         {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
           {[
+            ["Users", String(overview.total_users)],
+            ["Scholarships", String(overview.total_scholarships)],
             ["Sources", `${overview.enabled_sources}/${overview.total_sources}`],
             ["Jobs", String(overview.total_jobs)],
             ["Pending", String(overview.pending_jobs)],
             ["Running", String(overview.running_jobs)],
             ["Match Snapshots", String(overview.total_match_snapshots)],
+            [
+              "Last Ingestion",
+              overview.last_ingestion_at ? new Date(overview.last_ingestion_at).toLocaleDateString() : "Never",
+            ],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl border border-zinc-900/8 bg-white/90 p-5 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-zinc-500">{label}</p>
-              <p className="mt-3 text-3xl font-black tracking-tight text-zinc-950">{value}</p>
+              <p className="mt-3 text-2xl font-black tracking-tight text-zinc-950">{value}</p>
             </div>
           ))}
         </section>
@@ -135,10 +145,18 @@ export default function AdminPage() {
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <input
                     className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-900"
+                    type="text"
+                    list="country-filter-options"
                     value={countryFilter}
                     onChange={(event) => setCountryFilter(event.target.value)}
                     placeholder="Country filter"
+                    autoComplete="off"
                   />
+                  <datalist id="country-filter-options">
+                    {COUNTRIES.map((country) => (
+                      <option key={country} value={country} />
+                    ))}
+                  </datalist>
                   <input
                     className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-900"
                     value={regionFilter}

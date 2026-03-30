@@ -23,6 +23,7 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
       ? [
           { href: "/dashboard", label: "Dashboard", meta: "Overview" },
           { href: "/scholarships", label: "All Scholarships", meta: "Catalog" },
+          { href: "/sources", label: "Sources", meta: "Crawlers" },
           { href: "/admin", label: "Operations", meta: "Ingestion" },
           { href: "/settings", label: "Settings", meta: "Account" },
         ]
@@ -79,14 +80,6 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
             );
           })}
         </nav>
-
-        <div className="mt-8 rounded-xl border border-white/10 bg-gradient-to-br from-zinc-800 to-zinc-950 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/80">Workflow</p>
-          <p className="mt-3 text-xl font-bold">Profile {"->"} match {"->"} apply.</p>
-          <p className="mt-2 text-sm leading-7 text-white/85">
-            Use the dashboard to refine fit, then move into scholarship review and document drafting.
-          </p>
-        </div>
 
         <button
           type="button"

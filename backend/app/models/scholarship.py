@@ -10,6 +10,7 @@ class Scholarship(Base):
     __tablename__ = "scholarships"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    scholarship_key: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     title: Mapped[str] = mapped_column(String(255), index=True)
     country: Mapped[str] = mapped_column(String(120), index=True)
     degree: Mapped[str] = mapped_column(String(120))
@@ -17,7 +18,7 @@ class Scholarship(Base):
     source_key: Mapped[str | None] = mapped_column(String(120), index=True, nullable=True)
     source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     official_source: Mapped[bool] = mapped_column(Boolean, default=True)
-    source_url: Mapped[str] = mapped_column(String(500), unique=True)
+    source_url: Mapped[str] = mapped_column(String(500), index=True)
     deadline: Mapped[date | None] = mapped_column(Date, nullable=True)
     funding_type: Mapped[str | None] = mapped_column(String(120), nullable=True)
     coverage_summary: Mapped[str | None] = mapped_column(Text, nullable=True)

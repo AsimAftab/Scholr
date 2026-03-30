@@ -7,6 +7,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models.admin import CrawlJob, CrawlJobStatus, CrawlJobType, ScholarshipSourceConfig
+from app.models.scholarship import Scholarship
 from app.models.user import User
 from app.models.user_scholarship_match import UserScholarshipMatch
 from app.schemas.admin import AdminOverview, CrawlJobCreate, RematchJobCreate
@@ -62,6 +63,17 @@ class AdminService:
             or 0
         )
         total_match_snapshots = self.db.scalar(select(func.count()).select_from(UserScholarshipMatch)) or 0
+        
+        total_users = self.db.scalar(select(func.count()).select_from(User)) or 0
+        total_scholarships = self.db.scalar(select(func.count()).select_from(Scholarship)) or 0
+        last_ingestion_at = self.db.scalar(
+            select(func.max(CrawlJob.finished_at))
+            .where(
+                CrawlJob.status == CrawlJobStatus.COMPLETED.value,
+                CrawlJob.job_type.in_([CrawlJobType.GLOBAL_INGEST.value, CrawlJobType.SOURCE_SYNC.value])
+            )
+        )
+
         return AdminOverview(
             total_sources=total_sources,
             enabled_sources=enabled_sources,
@@ -71,6 +83,9 @@ class AdminService:
             completed_jobs=completed_jobs,
             failed_jobs=failed_jobs,
             total_match_snapshots=total_match_snapshots,
+            total_users=total_users,
+            total_scholarships=total_scholarships,
+            last_ingestion_at=last_ingestion_at,
         )
 
     def create_crawl_job(self, admin_user: User, payload: CrawlJobCreate) -> CrawlJob:

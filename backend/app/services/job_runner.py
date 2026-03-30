@@ -14,7 +14,7 @@ from app.models.admin import CrawlJob, CrawlJobStatus, CrawlJobType, Scholarship
 from app.models.user import User
 from app.services.admin_service import AdminService
 from app.services.scholarship_ingestion import ScholarshipIngestionService
-from app.services.tinyfish_client import TinyFishClient, TinyFishRunResult
+from app.services.tinyfish_client import TinyFishClient, TinyFishRateLimitError, TinyFishRunResult
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +129,7 @@ class JobRunner:
         for source_batch in self._chunk_sources(remaining_sources, batch_size):
             if self._submit_and_process_batch(db, job, source_batch, tinyfish, ingestion):
                 has_pending_remote_runs = True
+                break
 
         if not sources:
             self._append_log(job, "No enabled sources matched the filters.")
@@ -149,7 +150,21 @@ class JobRunner:
         run_to_source: dict[str, ScholarshipSourceConfig] = {}
         if sources_to_start:
             run_payloads = [ingestion.build_run_request(source) for source in sources_to_start]
-            run_ids = tinyfish.start_batch_runs(run_payloads)
+            try:
+                run_ids = tinyfish.start_batch_runs(run_payloads)
+            except TinyFishRateLimitError as error:
+                retry_hint = (
+                    f" Retry after about {error.retry_after_seconds}s."
+                    if error.retry_after_seconds is not None
+                    else ""
+                )
+                self._append_log(
+                    job,
+                    f"TinyFish rate limited batch submission for {len(sources_to_start)} source(s).{retry_hint}",
+                )
+                job.updated_at = datetime.now(timezone.utc)
+                db.commit()
+                return True
             submitted_at = datetime.now(timezone.utc)
 
             for source, run_id in zip(sources_to_start, run_ids, strict=True):
@@ -205,6 +220,9 @@ class JobRunner:
                 ),
             )
         except Exception as error:
+            db.rollback()
+            job = db.get(CrawlJob, job.id) or job
+            source = db.get(ScholarshipSourceConfig, source.id) or source
             source.last_error = str(error)
             job.failed_count += 1
             self._append_log(job, f"Failed source {source.source_key}: {error}")

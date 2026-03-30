@@ -74,3 +74,6 @@ class AdminOverview(BaseModel):
     completed_jobs: int
     failed_jobs: int
     total_match_snapshots: int
+    total_users: int
+    total_scholarships: int
+    last_ingestion_at: datetime | None = None

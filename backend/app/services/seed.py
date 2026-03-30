@@ -15,6 +15,7 @@ from app.services.source_registry import SOURCE_CATALOG
 
 SEED_SCHOLARSHIPS = [
     {
+        "scholarship_key": "seed-maple-global-graduate",
         "title": "Maple Global Graduate Scholarship",
         "country": "Canada",
         "degree": "Masters",
@@ -50,6 +51,7 @@ SEED_SCHOLARSHIPS = [
         "raw_payload": {},
     },
     {
+        "scholarship_key": "seed-northern-research-excellence",
         "title": "Northern Research Excellence Award",
         "country": "United Kingdom",
         "degree": "PhD",
@@ -85,6 +87,7 @@ SEED_SCHOLARSHIPS = [
         "raw_payload": {},
     },
     {
+        "scholarship_key": "seed-asia-future-leaders",
         "title": "Asia Future Leaders Scholarship",
         "country": "Australia",
         "degree": "Masters",

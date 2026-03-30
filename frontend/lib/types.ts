@@ -73,6 +73,9 @@ export type AdminOverview = {
   completed_jobs: number;
   failed_jobs: number;
   total_match_snapshots: number;
+  total_users: number;
+  total_scholarships: number;
+  last_ingestion_at: string | null;
 };
 
 export type AdminSource = {

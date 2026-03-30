@@ -8,13 +8,20 @@ import { ScholarshipList } from "@/components/scholarship-list";
 import { useAuthContext } from "@/lib/auth-context";
 import { getMatches, getScholarships } from "@/lib/api";
 import { Match, Scholarship } from "@/lib/types";
+import { COUNTRIES } from "@/lib/countries";
 
 export default function ScholarshipsPage() {
   const router = useRouter();
   const { user, loading, handleLogout } = useAuthContext();
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [countryFilter, setCountryFilter] = useState("");
   const [error, setError] = useState("");
+
+  // Filter scholarships by country
+  const filteredScholarships = countryFilter
+    ? scholarships.filter((s) => s.country.toLowerCase() === countryFilter.toLowerCase())
+    : scholarships;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,7 +36,7 @@ export default function ScholarshipsPage() {
   }, []);
 
   useEffect(() => {
-    if (user?.profile) {
+    if (user?.role !== "admin" && user?.profile) {
       getMatches(user.profile)
         .then((response) => setMatches(response.matches))
         .catch(() => setError("Unable to load scholarship matches."));
@@ -54,20 +61,49 @@ export default function ScholarshipsPage() {
     <AppShell
       user={user}
       onLogout={handleLogout}
-      title="Scholarships"
-      subtitle="Browse the indexed scholarship set, compare fit scores, and inspect missing requirements before you apply."
+      title={user.role === "admin" ? "Scholarship Catalog" : "Scholarships"}
+      subtitle={
+        user.role === "admin"
+          ? "Inspect the full scholarship dataset indexed in the system, including eligibility, funding, and source details."
+          : "Browse the indexed scholarship set, compare fit scores, and inspect missing requirements before you apply."
+      }
     >
       <div className="space-y-6">
+        {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
 
-          {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
+        <div className="rounded-xl border border-zinc-900/8 bg-white/90 p-6 shadow-md backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">Filter Scholarships</p>
+            <span className="text-sm text-zinc-500">
+              {filteredScholarships.length} of {scholarships.length} scholarships
+            </span>
+          </div>
+          <div className="mt-4">
+            <input
+              className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-900"
+              type="text"
+              list="scholarship-country-options"
+              value={countryFilter}
+              onChange={(event) => setCountryFilter(event.target.value)}
+              placeholder="Filter by country (e.g., Australia, United States, United Kingdom)"
+              autoComplete="off"
+            />
+            <datalist id="scholarship-country-options">
+              {COUNTRIES.map((country) => (
+                <option key={country} value={country} />
+              ))}
+            </datalist>
+          </div>
+        </div>
 
-          <ScholarshipList
-            scholarships={scholarships}
-            matches={matches}
-            profile={user.profile}
-            title="Structured Dataset"
-            emptyMessage="Finish your profile in the dashboard to unlock personalized scholarship rankings."
-          />
+        <ScholarshipList
+          scholarships={filteredScholarships}
+          matches={matches}
+          profile={user.profile}
+          title={user.role === "admin" ? "All Indexed Scholarships" : "Structured Dataset"}
+          emptyMessage="Finish your profile in the dashboard to unlock personalized scholarship rankings."
+          adminView={user.role === "admin"}
+        />
       </div>
     </AppShell>
   );

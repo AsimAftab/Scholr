@@ -17,6 +17,15 @@ class TinyFishRunResult:
     error: str | None = None
 
 
+class TinyFishRateLimitError(Exception):
+    def __init__(self, retry_after_seconds: int | None = None) -> None:
+        self.retry_after_seconds = retry_after_seconds
+        message = "TinyFish rate limited batch submission"
+        if retry_after_seconds is not None:
+            message = f"{message}; retry after {retry_after_seconds}s"
+        super().__init__(message)
+
+
 class TinyFishClient:
     def __init__(self) -> None:
         self.base_url = settings.tinyfish_base_url.rstrip("/")
@@ -34,7 +43,13 @@ class TinyFishClient:
 
         with self._client() as client:
             response = client.post("/v1/automation/run-batch", json={"runs": runs})
-            response.raise_for_status()
+            try:
+                response.raise_for_status()
+            except httpx.HTTPStatusError as error:
+                if error.response.status_code == 429:
+                    retry_after = self._coerce_retry_after(error.response.headers.get("Retry-After"))
+                    raise TinyFishRateLimitError(retry_after) from error
+                raise
             payload = response.json()
             run_ids = payload.get("run_ids")
             if not isinstance(run_ids, list) or not run_ids:
@@ -94,6 +109,10 @@ class TinyFishClient:
                 if result.status in {"COMPLETED", "FAILED", "CANCELLED", "NOT_FOUND"}:
                     completed[run_id] = result
                     pending.pop(run_id, None)
+            # Return as soon as any run reaches a terminal state so the job runner
+            # can persist local progress without waiting for the entire batch.
+            if completed:
+                break
             if pending:
                 time.sleep(self.poll_interval_seconds)
 
@@ -119,3 +138,14 @@ class TinyFishClient:
             if message:
                 return str(message)
         return str(value)
+
+    def _coerce_retry_after(self, value: Any) -> int | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            try:
+                parsed = int(value.strip())
+            except ValueError:
+                return None
+            return parsed if parsed >= 0 else None
+        return None

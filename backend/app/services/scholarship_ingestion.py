@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
+import hashlib
 import json
 from typing import Any
 
@@ -45,7 +46,7 @@ class ScholarshipIngestionService:
         updated = 0
 
         for item in scholarships:
-            existing = self.db.scalar(select(Scholarship).where(Scholarship.source_url == item["source_url"]))
+            existing = self.db.scalar(select(Scholarship).where(Scholarship.scholarship_key == item["scholarship_key"]))
             if existing is None:
                 self.db.add(Scholarship(**item))
                 created += 1
@@ -117,6 +118,7 @@ class ScholarshipIngestionService:
 
             normalized.append(
                 {
+                    "scholarship_key": self._build_scholarship_key(source, title, source_url),
                     "title": title,
                     "country": self._coerce_text(raw_item.get("host_country")) or source.country,
                     "degree": self._primary_degree(degree_levels),
@@ -140,6 +142,10 @@ class ScholarshipIngestionService:
             )
 
         return normalized
+
+    def _build_scholarship_key(self, source: ScholarshipSourceConfig, title: str, source_url: str) -> str:
+        payload = f"{source.source_key}|{source_url}|{title}".encode("utf-8")
+        return hashlib.sha1(payload).hexdigest()
 
     def _compose_eligibility_text(
         self,
