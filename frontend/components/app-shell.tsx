@@ -49,7 +49,7 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
-      <aside className="border-r border-zinc-900/8 bg-zinc-950 px-6 py-8 text-white">
+      <aside className="lg:sticky lg:top-0 lg:h-screen border-r border-zinc-900/8 bg-zinc-950 px-6 py-8 text-white lg:overflow-y-auto">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-black tracking-tighter text-white">SCHOLR.</span>
         </div>
