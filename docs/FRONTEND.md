@@ -67,18 +67,14 @@ Libraries:
 
 ## Theme System
 
-Theme tokens live in:
+The frontend currently uses a minimal Tailwind theme with neutral zinc colors.
+
+Theme configuration files:
 
 - [tailwind.config.ts](C:\Users\asima\Desktop\Projects\Scholr\frontend\tailwind.config.ts)
 - [globals.css](C:\Users\asima\Desktop\Projects\Scholr\frontend\app\globals.css)
 
-Primary color families:
-
-- `bronze`
-- `bark`
-- `custard`
-- `chocolate`
-- `paprika`
+Custom color tokens (`bronze`, `bark`, `custard`, `chocolate`, `paprika`) were planned but are not currently implemented in the Tailwind config.
 
 Design guidance:
 
@@ -97,7 +93,7 @@ Current forms validated:
 
 - sign-up
 - sign-in
-- profile form
+- profile form (including passout_year field)
 
 ## Frontend Env Files
 

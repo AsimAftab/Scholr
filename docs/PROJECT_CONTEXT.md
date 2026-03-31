@@ -110,11 +110,23 @@ File: [profile.py](C:\Users\asima\Desktop\Projects\Scholr\backend\app\models\pro
 
 Fields:
 
+- `id`
 - `country`
 - `target_country`
-- `degree`
+- `degree_level`
+- `field_of_study`
+- `passout_year` (optional)
 - `gpa`
-- `ielts_score`
+- `ielts_score` (optional, nullable)
+- `gender` (optional)
+- `date_of_birth` (optional)
+- `resume_url` (optional)
+
+Notes:
+
+- User profile fields are validated via Pydantic schemas
+- `ielts_score` supports half bands (0, 1, 2, 2.5, 3, 3.5, 4, 4.5, ..., 9)
+- Migration downgrades use `-1` as sentinel for missing IELTS scores
 
 ### `Scholarship`
 
@@ -122,18 +134,30 @@ File: [scholarship.py](C:\Users\asima\Desktop\Projects\Scholr\backend\app\models
 
 Fields:
 
+- `id`
 - `title`
 - `country`
 - `degree`
+- `region`
+- `source_key`
+- `source_name`
+- `official_source`
 - `source_url`
 - `deadline`
+- `funding_type`
+- `coverage_summary`
+- `is_fully_funded`
+- `field_of_study` (array)
+- `eligible_countries` (array)
 - `eligibility_text`
-- `structured_eligibility`
+- `structured_eligibility` (JSON)
+- `raw_payload` (JSON)
 
 Notes:
 
-- `structured_eligibility` is stored as JSON.
-- Current schema is intentionally simple, not final.
+- `structured_eligibility` is stored as JSON with fields like `gpa_required`, `ielts_required`, `degree_levels`, etc.
+- `raw_payload` stores the original extraction data from TinyFish or crawler
+- Current schema supports multiple sources and ingestion methods
 
 ## Backend Auth Model
 

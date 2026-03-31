@@ -82,5 +82,5 @@ The repository includes root-level scripts for quick local setup and execution:
 *   **Database Migrations:** Schema changes must be managed via Alembic. Do not use `Base.metadata.create_all()`. Run migrations with `alembic upgrade head`.
 *   **Authentication:** The platform uses signed session cookies. Ensure `SESSION_SECRET` is properly set. The frontend resolves sessions via the `GET /api/v1/auth/me` endpoint.
 *   **Error Handling:** The backend normalizes all API errors into a consistent `{ "detail": "message", "request_id": "uuid" }` JSON format.
-*   **Frontend Styling:** The frontend relies on a specific Tailwind CSS theme with custom color tokens (e.g., bronze, bark, custard, paprika). Maintain this established visual hierarchy and avoid generic default styles.
+*   **Frontend Styling:** The frontend uses a minimal Tailwind CSS theme with the neutral zinc palette. Custom color tokens (bronze, bark, custard, paprika) were planned but are not currently implemented. Maintain the "serious SaaS" visual direction and avoid generic default styles.
 *   **AI Integration:** AI features (like SOP generation or eligibility structuring) are designed to degrade gracefully to deterministic mock outputs if `OPENAI_API_KEY` is not provided in the environment.

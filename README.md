@@ -228,9 +228,12 @@ Health endpoints:
 - The ingestion runner uses TinyFish source by source and stores raw extraction payloads beside normalized scholarship fields.
 - Request IDs and API logging are handled centrally.
 - Errors are normalized into a consistent `{ detail, request_id }` shape.
+- Profile form includes comprehensive validation for all fields including `passout_year` and half-band IELTS scores (2.5, 3.5).
 
 ## Production Considerations
 
 - Replace local development defaults with managed PostgreSQL in deployment.
+- Set strong admin password (not the default placeholder).
 - Add background jobs for large crawling and structuring batches.
 - Add role-based access control, observability, and audit trails before launch.
+- Ensure all icon assets (PNG fallbacks, Apple touch icon) are properly deployed.
