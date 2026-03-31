@@ -12,9 +12,9 @@ if (-not (Test-Path ".env.local")) {
 }
 
 if ($Production) {
-  npm run build
-  npm run start
+  bun run build
+  bun run start
 }
 else {
-  npm run dev
+  bun run dev
 }

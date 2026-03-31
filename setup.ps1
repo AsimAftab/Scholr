@@ -16,7 +16,7 @@ Pop-Location
 
 Write-Host "Setting up Scholr frontend..."
 Push-Location (Join-Path $root "frontend")
-npm install
+bun install
 if (-not (Test-Path ".env.local")) {
   Copy-Item ".env.example" ".env.local"
 }
