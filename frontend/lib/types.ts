@@ -6,7 +6,7 @@ export type Profile = {
   field_of_study?: string;
   passout_year?: number;
   gpa: number;
-  ielts_score: number;
+  ielts_score?: number;
   gender?: string;
   date_of_birth?: string;
   resume_url?: string;

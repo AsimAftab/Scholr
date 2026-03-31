@@ -14,7 +14,7 @@ class Profile(Base):
     field_of_study: Mapped[str | None] = mapped_column("major", String(120), nullable=True)
     passout_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     gpa: Mapped[float] = mapped_column(Float)
-    ielts_score: Mapped[float] = mapped_column(Float)
+    ielts_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     gender: Mapped[str | None] = mapped_column(String(50), nullable=True)
     date_of_birth: Mapped[str | None] = mapped_column(String(50), nullable=True)
     resume_url: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -100,7 +100,7 @@ export default function ScholarshipsPage() {
           scholarships={filteredScholarships}
           matches={matches}
           profile={user.profile}
-          title={user.role === "admin" ? "All Indexed Scholarsips" : "Available Scholarships"}
+          title={user.role === "admin" ? "All Indexed Scholarships" : "Available Scholarships"}
           emptyMessage="Finish your profile in the dashboard to unlock personalized scholarship rankings."
           adminView={user.role === "admin"}
         />

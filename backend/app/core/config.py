@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     database_url: str = Field(alias="DATABASE_URL")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-4.1-mini", alias="OPENAI_MODEL")
+    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
     tinyfish_api_key: str | None = Field(default=None, alias="TINYFISH_API_KEY")
     tinyfish_base_url: str = Field(default="https://agent.tinyfish.ai", alias="TINYFISH_BASE_URL")
     tinyfish_timeout_seconds: int = Field(default=180, alias="TINYFISH_TIMEOUT_SECONDS")

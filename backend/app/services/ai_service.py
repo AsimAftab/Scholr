@@ -33,11 +33,13 @@ class AIService:
             field_fragment = (
                 f" in {profile.field_of_study}" if profile.field_of_study else ""
             )
+            ielts_fragment = (
+                f" and IELTS score of {profile.ielts_score}" if profile.ielts_score is not None else ""
+            )
             return (
                 f"I am applying for the {scholarship.title} in {scholarship.country} to pursue a "
-                f"{profile.degree_level}{field_fragment}. My academic profile includes a GPA of {profile.gpa} and IELTS "
-                f"score of {profile.ielts_score}. This scholarship aligns with my goal to study in "
-                f"{profile.target_country} and contribute meaningfully after graduation."
+                f"{profile.degree_level}{field_fragment}. My academic profile includes a GPA of {profile.gpa}{ielts_fragment}. "
+                f"This scholarship aligns with my goal to study in {profile.target_country} and contribute meaningfully after graduation."
             )
         prompt = (
             f"Write a concise statement of purpose draft for a scholarship application.\n"

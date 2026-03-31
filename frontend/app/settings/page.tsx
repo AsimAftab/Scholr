@@ -36,6 +36,10 @@ export default function SettingsPage() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (saving) {
+      return;
+    }
+
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const newPassword = formData.get("newPassword") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
@@ -91,20 +95,24 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              <label className="space-y-2 text-sm font-medium text-zinc-900">
+              <label htmlFor="full-name-input" className="space-y-2 text-sm font-medium text-zinc-900">
                 <span>Full Name</span>
                 <input
+                  id="full-name-input"
                   type="text"
+                  name="full_name"
                   defaultValue={user.full_name}
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   placeholder="Your full name"
                 />
               </label>
 
-              <label className="space-y-2 text-sm font-medium text-zinc-900">
+              <label htmlFor="email-input" className="space-y-2 text-sm font-medium text-zinc-900">
                 <span>Email Address</span>
                 <input
+                  id="email-input"
                   type="email"
+                  name="email"
                   defaultValue={user.email}
                   disabled
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-100 px-4 py-3 text-zinc-500 outline-none cursor-not-allowed"
@@ -129,7 +137,6 @@ export default function SettingsPage() {
                 <input
                   type="password"
                   name="newPassword"
-                  minLength={8}
                   autoComplete="new-password"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   placeholder="••••••••"
@@ -141,7 +148,6 @@ export default function SettingsPage() {
                 <input
                   type="password"
                   name="confirmPassword"
-                  minLength={8}
                   autoComplete="new-password"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   placeholder="••••••••"

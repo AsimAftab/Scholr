@@ -52,7 +52,7 @@ class MatchingService:
             missing.append(f"GPA requirement not met ({required_gpa})")
 
         required_ielts = structured.get("ielts_required")
-        if required_ielts is None or profile.ielts_score >= required_ielts:
+        if required_ielts is None or (profile.ielts_score is not None and profile.ielts_score >= required_ielts):
             score += 15
         else:
             missing.append(f"IELTS requirement not met ({required_ielts})")

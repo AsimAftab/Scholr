@@ -112,7 +112,6 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
-                <option value="Prefer not to say">Prefer not to say</option>
               </select>
               {errors.gender ? <span className="block text-sm text-red-700">{errors.gender}</span> : null}
             </label>
@@ -185,25 +184,44 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                     gpa: event.target.value ? Number(event.target.value) : 0,
                   }))
                 }
-                placeholder="GPA"
+                placeholder="GPA (e.g., 3.5 or 8.5)"
               />
               {errors.gpa ? <span className="block text-sm text-red-700">{errors.gpa}</span> : null}
+              <p className="text-xs text-zinc-500">Enter your GPA on your institution&apos;s scale (0-4.0 or 0-10.0)</p>
             </label>
             <label className="space-y-2 text-sm font-medium text-zinc-900">
-              <span>IELTS Score</span>
-              <input
+              <span>IELTS Score / Band</span>
+              <select
+                id="ielts-score"
+                aria-label="IELTS Score Band"
                 className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
-                type="number"
-                step="0.1"
-                value={String(form.ielts_score ?? "")}
+                value={form.ielts_score ?? ""}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    ielts_score: Number(event.target.value),
+                    ielts_score: event.target.value !== "" ? Number(event.target.value) : undefined,
                   }))
                 }
-                placeholder="IELTS Score"
-              />
+              >
+                <option value="">Select band</option>
+                <option value="0">Band 0 (Not attempted)</option>
+                <option value="1">Band 1</option>
+                <option value="2">Band 2</option>
+                <option value="2.5">Band 2.5</option>
+                <option value="3">Band 3</option>
+                <option value="3.5">Band 3.5</option>
+                <option value="4">Band 4</option>
+                <option value="4.5">Band 4.5</option>
+                <option value="5">Band 5</option>
+                <option value="5.5">Band 5.5</option>
+                <option value="6">Band 6</option>
+                <option value="6.5">Band 6.5</option>
+                <option value="7">Band 7</option>
+                <option value="7.5">Band 7.5</option>
+                <option value="8">Band 8</option>
+                <option value="8.5">Band 8.5</option>
+                <option value="9">Band 9</option>
+              </select>
               {errors.ielts_score ? <span className="block text-sm text-red-700">{errors.ielts_score}</span> : null}
             </label>
           </div>

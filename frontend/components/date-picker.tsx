@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import clsx from "clsx";
 
 interface DatePickerProps {
@@ -18,6 +18,9 @@ const MONTHS = [
 export function DatePicker({ value, onChange, placeholder = "Select date", error }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  const dialogId = useId();
 
   const currentRealYear = new Date().getFullYear();
   
@@ -58,6 +61,70 @@ export function DatePicker({ value, onChange, placeholder = "Select date", error
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Focus management: move focus into dialog when opened
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const dialog = containerRef.current.querySelector('[role="dialog"]') as HTMLDivElement;
+      if (dialog) {
+        // Focus the first interactive element (the month select)
+        const firstInteractive = dialog.querySelector('button, select, input') as HTMLElement;
+        firstInteractive?.focus();
+      }
+    }
+  }, [isOpen]);
+
+  // Focus trap: keep Tab navigation within dialog when open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleTabKey(event: KeyboardEvent) {
+      if (event.key !== "Tab") return;
+
+      const dialog = containerRef.current?.querySelector('[role="dialog"]') as HTMLDivElement;
+      if (!dialog) return;
+
+      const focusableElements = dialog.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    }
+
+    function handleEscapeKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleTabKey);
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("keydown", handleTabKey);
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [isOpen]);
+
+  // Return focus to trigger when dialog closes
+  useEffect(() => {
+    if (wasOpen.current && !isOpen && triggerRef.current) {
+      triggerRef.current.focus();
+    }
+    wasOpen.current = isOpen;
+  }, [isOpen]);
+
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
@@ -90,9 +157,11 @@ export function DatePicker({ value, onChange, placeholder = "Select date", error
     <div className="relative" ref={containerRef}>
       <button
         type="button"
+        ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
+        aria-controls={dialogId}
         className={clsx(
           "flex w-full items-center justify-between rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-900",
           error ? "border-red-500 bg-red-50/50 text-red-900" : "border-zinc-200 bg-zinc-50 text-zinc-900 focus:bg-white",
@@ -107,11 +176,18 @@ export function DatePicker({ value, onChange, placeholder = "Select date", error
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-72 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl">
+        <div
+          id={dialogId}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Select date"
+          className="absolute z-50 mt-2 w-72 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl"
+        >
           <div className="mb-4 flex items-center justify-between gap-2">
             <select 
               value={currentMonth}
               onChange={(e) => setCurrentMonth(Number(e.target.value))}
+              aria-label="Select month"
               className="w-1/2 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-sm font-medium text-zinc-900 outline-none focus:border-zinc-900"
             >
               {MONTHS.map((month, index) => (
@@ -122,6 +198,7 @@ export function DatePicker({ value, onChange, placeholder = "Select date", error
             <select 
               value={currentYear}
               onChange={(e) => setCurrentYear(Number(e.target.value))}
+              aria-label="Select year"
               className="w-1/2 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-sm font-medium text-zinc-900 outline-none focus:border-zinc-900"
             >
               {years.map((year) => (

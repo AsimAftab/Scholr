@@ -4,6 +4,9 @@ import { COUNTRIES } from "@/lib/countries";
 
 const countrySet = new Set(COUNTRIES);
 
+// Dynamic validation bounds
+const MAX_PASSOUT_YEAR = new Date().getFullYear() + 10;
+
 export const signupSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
   full_name: z.string().trim().min(2, "Full name must be at least 2 characters."),
@@ -40,8 +43,14 @@ export const profileSchema = z.object({
     }),
   }),
   field_of_study: z.string().trim().min(2, "Field of study is required."),
-  gpa: z.number().min(0, "GPA must be at least 0.").max(4, "GPA must be 4.0 or below."),
-  ielts_score: z.number().min(0, "IELTS score must be at least 0.").max(9, "IELTS score must be 9.0 or below."),
+  passout_year: z
+    .number()
+    .int()
+    .min(1900, "Year must be 1900 or later.")
+    .max(MAX_PASSOUT_YEAR, `Year cannot be more than 10 years in the future (${MAX_PASSOUT_YEAR}).`)
+    .optional(),
+  gpa: z.number().min(0, "GPA must be at least 0.").max(10, "GPA must be 10.0 or below."),
+  ielts_score: z.number().min(0, "IELTS score must be at least 0.").max(9, "IELTS score must be 9.0 or below.").optional(),
   gender: z.string().optional(),
   date_of_birth: z
     .string()

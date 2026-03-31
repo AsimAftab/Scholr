@@ -157,10 +157,9 @@ Base path: `/api/v1`
 
 ### Design Tokens
 
-Frontend uses a custom Tailwind theme with specific color tokens:
-- `bronze`, `bark`, `custard`, `chocolate`, `paprika`
+Frontend uses a minimal Tailwind theme with neutral colors (zinc palette). Custom color tokens like `bronze`, `bark`, `custard`, `chocolate`, `paprika` were planned but are not currently implemented.
 
-Preserve this visual system when adding new UI components.
+When extending the theme, maintain the "serious SaaS" visual direction.
 
 ## Important Conventions
 
@@ -203,5 +202,5 @@ Frontend:
 - Do not reintroduce direct table creation (`Base.metadata.create_all()`)
 - Keep business logic in service layer, not route handlers
 - Maintain the `{ detail, request_id }` error response shape
-- Preserve the bronze/bark/custard/paprika visual system
+- Maintain the minimal "serious SaaS" visual direction using the neutral zinc palette
 - Use Alembic for any schema changes
