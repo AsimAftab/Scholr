@@ -20,7 +20,7 @@ The project has comprehensive documentation in the `docs/` directory. Consult th
 
 Scholr is an AI-powered scholarship discovery and matching platform with three main services:
 
-- **frontend/** — Next.js 14 dashboard (App Router, React 18, TypeScript, Tailwind CSS, Bun runtime)
+- **frontend/** — Next.js 14 dashboard (App Router, React 18, TypeScript, Tailwind CSS)
 - **backend/** — FastAPI REST API with SQLAlchemy ORM and Alembic migrations
 - **crawler/** — Playwright-based scholarship scraper
 
@@ -71,16 +71,14 @@ uvicorn app.main:app --reload --port 8000
 
 ### Frontend (Manual)
 
-**Important:** The frontend has been migrated to use Bun instead of npm.
-
 ```bash
 cd frontend
-bun install
+npm install
 copy .env.example .env.local
-bun run dev
+npm run dev
 # or
-bun run build
-bun start
+npm run build
+npm start
 ```
 
 ### Crawler (Manual)
@@ -101,11 +99,6 @@ Run migrations (backend directory):
 alembic upgrade head
 ```
 
-Create new migration:
-```bash
-alembic revision --autogenerate -m "description"
-```
-
 ## High-Level Architecture
 
 ### Backend Structure (`backend/app/`)
@@ -113,32 +106,18 @@ alembic revision --autogenerate -m "description"
 - `api/` — Route handlers and dependency injection (`routes.py`, `deps.py`)
 - `core/` — Configuration, security, logging, middleware, exception handling
 - `db/` — SQLAlchemy base and session management
-- `models/` — ORM models (User, Profile, Scholarship, UserScholarshipMatch)
+- `models/` — ORM models (User, Profile, Scholarship)
 - `schemas/` — Pydantic request/response models
-- `services/` — Domain logic:
-  - `auth_service.py` — Authentication, session management
-  - `profile_service.py` — User profile CRUD
-  - `scholarship_service.py` — Scholarship queries
-  - `matching.py` — Scholarship matching algorithm
-  - `ai_service.py` — AI content generation (SOP, LOR, summaries)
-  - `job_runner.py` — Background job processing
-  - `tinyfish_client.py` — TinyFish API integration for ingestion
-  - `scholarship_ingestion.py` — Scholarship data ingestion pipeline
-  - `source_registry.py` — Source manifest registry
-  - `admin_service.py` — Admin operations
+- `services/` — Domain logic (auth, matching, AI generation, profile, scholarship)
 
 **Important:** Business logic belongs in `services/`, not in route handlers.
 
 ### Frontend Structure (`frontend/`)
 
-- `app/` — Next.js App Router pages:
-  - Public: `/`, `/sign-in`, `/sign-up`
-  - Authenticated: `/dashboard`, `/scholarships`, `/profile`, `/admin`, `/settings`, `/sources`
+- `app/` — Next.js App Router pages (routes: `/`, `/sign-in`, `/sign-up`, `/dashboard`, `/scholarships`)
 - `components/` — Shared React components (app-shell, auth-form, scholarship-card)
 - `providers/` — React context providers for app-wide state management (auth, future providers)
 - `lib/` — API client (`api.ts`), auth hook (`auth-context.ts`), types, validation schemas
-
-**Runtime:** Frontend uses Bun (not npm) for package management and execution.
 
 ### API Endpoints
 
@@ -161,15 +140,11 @@ Base path: `/api/v1`
 - `POST /generate-lor` — Generate Letter of Recommendation
 - `POST /summarize-scholarship` — Generate scholarship summary
 
-**Admin (if applicable):**
-- Admin endpoints for ingestion and source management
-
 ### Domain Models
 
-**User:** `id`, `email`, `full_name`, `hashed_password`, `profile_id`, `role`
-**Profile:** `country`, `target_country`, `degree_level`, `field_of_study`, `passout_year`, `gpa`, `ielts_score`, `gender`, `date_of_birth`, `resume_url`
-**Scholarship:** `title`, `country`, `degree`, `region`, `source_key`, `source_name`, `official_source`, `source_url`, `deadline`, `funding_type`, `coverage_summary`, `is_fully_funded`, `field_of_study`, `eligible_countries`, `eligibility_text`, `structured_eligibility`, `raw_payload`
-**UserScholarshipMatch:** Junction table for user-scholarship interactions
+**User:** `id`, `email`, `full_name`, `hashed_password`, `profile_id`
+**Profile:** `country`, `target_country`, `degree`, `gpa`, `ielts_score`
+**Scholarship:** `title`, `country`, `degree`, `source_url`, `deadline`, `eligibility_text`, `structured_eligibility`
 
 ### Authentication Model
 
@@ -194,7 +169,6 @@ When extending the theme, maintain the "serious SaaS" visual direction.
 - **Error Handling:** All API errors return `{ "detail": "message", "request_id": "uuid" }`.
 - **AI Services:** Degrade gracefully to mock outputs if `OPENAI_API_KEY` is not provided.
 - **Logging:** Request IDs assigned via middleware; logs include method, path, status, duration.
-- **Background Jobs:** `JobRunner` service handles async task processing in the backend lifespan.
 
 ### Frontend
 
@@ -202,22 +176,15 @@ When extending the theme, maintain the "serious SaaS" visual direction.
 - **State Management:** Add app-wide state to `providers/` directory; consume via custom hooks in `lib/`.
 - **Data Fetching:** Use `lib/api.ts` for all backend communication (includes credentials for cookies).
 - **Validation:** Use Zod schemas in `lib/validation.ts`.
-- **Runtime:** Use Bun commands (`bun install`, `bun run dev`, `bun run build`, `bun start`) instead of npm.
 
 ### Environment Variables
 
 Backend:
 - `DATABASE_URL` — PostgreSQL connection string
 - `OPENAI_API_KEY` — Optional (for AI features)
-- `OPENAI_MODEL` — Default: `gpt-4o-mini`
+- `OPENAI_MODEL` — Default: `gpt-4.1-mini`
 - `SESSION_SECRET` — Required for session signing
 - `AUTO_SEED` — Dev-only seed data
-- `TINYFISH_API_KEY` — For TinyFish ingestion
-- `TINYFISH_BASE_URL` — Default: `https://agent.tinyfish.ai`
-- `TINYFISH_TIMEOUT_SECONDS` — Default: 180
-- `TINYFISH_POLL_INTERVAL_SECONDS` — Default: 5
-- `TINYFISH_BATCH_SIZE` — Default: 5
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_FULL_NAME` — Admin bootstrap
 
 Frontend:
 - `NEXT_PUBLIC_API_URL` — Backend API base URL (default: `http://localhost:8000/api/v1`)
@@ -229,8 +196,6 @@ Frontend:
 - Frontend runs on `http://localhost:3000`
 - Docker healthchecks wait for PostgreSQL before starting backend
 - Backend container runs migrations before serving traffic
-- Backend starts `JobRunner` on startup for background job processing
-- Frontend uses Bun for optimal performance (not npm/node)
 
 ## Safe Editing Guidelines
 
@@ -239,6 +204,3 @@ Frontend:
 - Maintain the `{ detail, request_id }` error response shape
 - Maintain the minimal "serious SaaS" visual direction using the neutral zinc palette
 - Use Alembic for any schema changes
-- Use Bun commands for frontend operations, not npm
-- Be aware that the project includes TinyFish integration for scholarship ingestion
-- Background jobs are handled by `JobRunner` service running in the backend lifespan
