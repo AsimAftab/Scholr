@@ -52,8 +52,12 @@ export type Match = {
   country: string;
   deadline: string | null;
   match_score: number;
+  rule_score?: number | null;
+  llm_score?: number | null;
+  llm_confidence?: number | null;
   missing_requirements: string[];
   summary: string;
+  personalized_reasoning?: string | null;
 };
 
 export type User = {
@@ -113,4 +117,23 @@ export type AdminJob = {
   updated_at: string;
   started_at: string | null;
   finished_at: string | null;
+};
+
+export type AdminAISettings = {
+  ai_provider: string;
+  ai_fallback_order: string[];
+  openai_model: string;
+  cerebras_model: string;
+  cerebras_max_completion_tokens: number;
+  glm_model: string;
+  glm_base_url: string;
+  ollama_model: string;
+  ollama_base_url: string;
+  ollama_timeout_seconds: number;
+  ollama_keep_alive: string;
+  llm_match_top_n: number;
+  llm_match_rule_weight: number;
+  openai_key_configured: boolean;
+  cerebras_key_configured: boolean;
+  glm_key_configured: boolean;
 };

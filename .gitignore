@@ -6,6 +6,8 @@ dist/
 build/
 .turbo/
 .cache/
+coverage/
+*.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -53,6 +55,7 @@ test-results/
 Thumbs.db
 .idea/
 .vscode/
+.claude/
 
 # Logs / temp
 *.log
@@ -60,6 +63,7 @@ Thumbs.db
 *.seed
 tmp/
 temp/
+.sass-cache/
 
 # Alembic / misc
 *.bak

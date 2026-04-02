@@ -16,31 +16,116 @@ type ProfileFormProps = {
 
 type Tab = "basic" | "academic" | "goals" | "documents";
 
-const fieldOfStudyOptions = [
-  "Computer Science",
-  "Engineering",
-  "Business",
-  "Medicine",
-  "Law",
-  "Education",
-  "Economics",
-  "Data Science",
-  "Environmental Science",
-  "Arts",
-  "Other",
-];
+const fieldOfStudyCategories = {
+  "STEM & Technology": [
+    "Computer Science",
+    "Data Science & Analytics",
+    "Information Technology",
+    "Software Engineering",
+    "Cybersecurity",
+    "Artificial Intelligence & Machine Learning",
+    "Electrical Engineering",
+    "Mechanical Engineering",
+    "Civil Engineering",
+    "Chemical Engineering",
+    "Biomedical Engineering",
+    "Aerospace Engineering",
+    "Environmental Engineering",
+    "Industrial Engineering",
+  ],
+  "Business & Economics": [
+    "Business Administration",
+    "Finance & Accounting",
+    "Marketing",
+    "Management",
+    "Economics",
+    "Entrepreneurship",
+    "International Business",
+  ],
+  "Health & Medicine": [
+    "Medicine (MD/MBBS)",
+    "Nursing",
+    "Pharmacy",
+    "Public Health",
+    "Dentistry",
+    "Veterinary Medicine",
+    "Psychology",
+    "Physical Therapy",
+    "Medical Research",
+  ],
+  "Arts & Humanities": [
+    "Fine Arts",
+    "Design",
+    "Literature",
+    "History",
+    "Philosophy",
+    "Languages & Linguistics",
+    "Music & Performing Arts",
+    "Film & Media Studies",
+  ],
+  "Social Sciences": [
+    "Political Science",
+    "Sociology",
+    "Anthropology",
+    "International Relations",
+    "Communication Studies",
+    "Social Work",
+  ],
+  "Education": [
+    "Education",
+    "Curriculum & Instruction",
+    "Educational Leadership",
+    "Special Education",
+  ],
+  "Law": [
+    "Law (LLB/JD)",
+    "International Law",
+    "Criminal Justice",
+  ],
+  "Sciences": [
+    "Biology",
+    "Chemistry",
+    "Physics",
+    "Mathematics",
+    "Statistics",
+    "Environmental Science",
+    "Earth Sciences",
+    "Biotechnology",
+  ],
+  "Agriculture & Natural Resources": [
+    "Agriculture",
+    "Forestry",
+    "Food Science",
+    "Horticulture",
+  ],
+  "Architecture & Design": [
+    "Architecture",
+    "Urban Planning",
+    "Interior Design",
+  ],
+  "Interdisciplinary & Emerging Fields": [
+    "Sustainability Studies",
+    "Digital Media",
+    "Game Design",
+    "UX/UI Design",
+    "Blockchain & Web3",
+    "Robotics",
+  ],
+};
 
 export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProps) {
   const [form, setForm] = useState<Profile>(initialValue);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<Tab>("basic");
-  const selectedFieldOfStudy = fieldOfStudyOptions.includes(form.field_of_study ?? "")
+  // Create a flat array of all options for the includes check
+  const allFieldOfStudyOptions = Object.values(fieldOfStudyCategories).flat();
+  const selectedFieldOfStudy = allFieldOfStudyOptions.includes(form.field_of_study ?? "")
     ? form.field_of_study
-    : form.field_of_study
+    : form.field_of_study === "Other" || form.field_of_study
       ? "Other"
       : "";
   const otherFieldOfStudy =
-    selectedFieldOfStudy === "Other" && !fieldOfStudyOptions.includes(form.field_of_study ?? "")
+    selectedFieldOfStudy === "Other" && !allFieldOfStudyOptions.includes(form.field_of_study ?? "") && form.field_of_study !== "Other"
       ? form.field_of_study ?? ""
       : "";
 
@@ -61,7 +146,15 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
       onSubmit={async (event) => {
         event.preventDefault();
         try {
-          const payload = profileSchema.parse(form);
+          // Create a copy of the form data for validation
+          const formToValidate = { ...form };
+
+          // If "Other" is selected but no custom value is entered, set to empty string to trigger validation error
+          if (formToValidate.field_of_study === "Other") {
+            formToValidate.field_of_study = "";
+          }
+
+          const payload = profileSchema.parse(formToValidate);
           setErrors({});
           await onSubmit(payload);
         } catch (error) {
@@ -128,7 +221,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
             </label>
 
             <label className="space-y-2 text-sm font-medium text-zinc-900">
-              <span>Current Country</span>
+              <span>Country of Residence</span>
               <input
                 className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                 type="text"
@@ -140,7 +233,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                     country: event.target.value,
                   }))
                 }
-                placeholder="Current Country"
+                placeholder="Country of Residence"
                 autoComplete="off"
               />
               <datalist id="country-options">
@@ -177,13 +270,39 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                 className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                 type="number"
                 step="0.1"
+                min="0"
+                max="10"
                 value={String(form.gpa ?? "")}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    gpa: event.target.value ? Number(event.target.value) : 0,
-                  }))
-                }
+                onChange={(event) => {
+                  // Handle empty input - reset to 0 (GPA is required field)
+                  if (event.target.value === "") {
+                    setForm((current) => ({ ...current, gpa: 0 }));
+                    return;
+                  }
+
+                  // Parse as float (better than Number() for decimals)
+                  const value = parseFloat(event.target.value);
+
+                  // Reject NaN values - don't update form state
+                  if (Number.isNaN(value)) {
+                    return;
+                  }
+
+                  // Allow intermediate typing, don't clamp on change
+                  // This allows typing "1.5" without it becoming "10" when typing "15"
+                  setForm((current) => ({ ...current, gpa: value }));
+                }}
+                onBlur={(event) => {
+                  // Clamp to valid range on blur (when user leaves the field)
+                  const value = parseFloat(event.target.value);
+                  if (!Number.isNaN(value)) {
+                    if (value > 10) {
+                      setForm((current) => ({ ...current, gpa: 10 }));
+                    } else if (value < 0) {
+                      setForm((current) => ({ ...current, gpa: 0 }));
+                    }
+                  }
+                }}
                 placeholder="GPA (e.g., 3.5 or 8.5)"
               />
               {errors.gpa ? <span className="block text-sm text-red-700">{errors.gpa}</span> : null}
@@ -276,16 +395,21 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    field_of_study: event.target.value === "Other" ? otherFieldOfStudy : event.target.value,
+                    field_of_study: event.target.value === "Other" ? "Other" : event.target.value,
                   }))
                 }
               >
                 <option value="">Select field of study</option>
-                {fieldOfStudyOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
+                {Object.entries(fieldOfStudyCategories).map(([category, options]) => (
+                  <optgroup key={category} label={category}>
+                    {options.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
+                <option value="Other">Other</option>
               </select>
               {errors.field_of_study ? <span className="block text-sm text-red-700">{errors.field_of_study}</span> : null}
             </label>
@@ -297,7 +421,13 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                   className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   type="text"
                   value={otherFieldOfStudy}
-                  onChange={(event) => setForm((current) => ({ ...current, field_of_study: event.target.value }))}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setForm((current) => ({
+                      ...current,
+                      field_of_study: value || "Other", // Keep "Other" if cleared, otherwise use typed value
+                    }));
+                  }}
                   placeholder="Enter your field of study"
                 />
               </label>

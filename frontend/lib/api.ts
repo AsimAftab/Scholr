@@ -1,4 +1,4 @@
-import { AdminJob, AdminOverview, AdminSource, Match, Profile, Scholarship, User } from "@/lib/types";
+import { AdminAISettings, AdminJob, AdminOverview, AdminSource, Match, Profile, Scholarship, User } from "@/lib/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -45,9 +45,12 @@ export async function getScholarships(): Promise<Scholarship[]> {
   return request<Scholarship[]>("/scholarships");
 }
 
-export async function getMatches(profile: Profile): Promise<{ matches: Match[] }> {
+export async function getMatches(profile: Profile, forceRefresh = false): Promise<{ matches: Match[] }> {
   void profile;
-  return request<{ matches: Match[] }>("/match", { method: "POST" });
+  return request<{ matches: Match[] }>("/match", {
+    method: "POST",
+    body: JSON.stringify({ force_refresh: forceRefresh }),
+  });
 }
 
 export async function generateSop(profile: Profile, scholarshipId: number): Promise<string> {
@@ -102,6 +105,17 @@ export async function getAdminSources(): Promise<AdminSource[]> {
 
 export async function getAdminJobs(): Promise<AdminJob[]> {
   return request<AdminJob[]>("/admin/crawl-jobs");
+}
+
+export async function getAdminAISettings(): Promise<AdminAISettings> {
+  return request<AdminAISettings>("/admin/ai-settings");
+}
+
+export async function updateAdminAISettings(payload: AdminAISettings): Promise<AdminAISettings> {
+  return request<AdminAISettings>("/admin/ai-settings", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function createAdminCrawlJob(payload: {

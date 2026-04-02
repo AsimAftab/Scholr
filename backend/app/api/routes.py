@@ -5,10 +5,18 @@ from app.api.deps import get_admin_user, get_current_user
 from app.db.session import get_db
 from app.models.admin import CrawlJob
 from app.models.user import User
-from app.schemas.admin import AdminOverview, CrawlJobCreate, CrawlJobRead, RematchJobCreate, ScholarshipSourceConfigRead
+from app.schemas.admin import (
+    AdminAISettingsRead,
+    AdminAISettingsUpdate,
+    AdminOverview,
+    CrawlJobCreate,
+    CrawlJobRead,
+    RematchJobCreate,
+    ScholarshipSourceConfigRead,
+)
 from app.schemas.ai import ScholarshipActionRequest, StructuredEligibilityResponse, StructureEligibilityRequest
 from app.schemas.auth import AuthResponse, UserLogin, UserRead, UserSignup
-from app.schemas.match import MatchResponse
+from app.schemas.match import MatchRequest, MatchResponse
 from app.schemas.profile import ProfileCreate, ProfileRead
 from app.schemas.scholarship import ScholarshipRead
 from app.services.admin_service import AdminService
@@ -64,13 +72,14 @@ def list_scholarships(db: Session = Depends(get_db)) -> list[ScholarshipRead]:
 
 @router.post("/match", response_model=MatchResponse)
 def match_profile(
+    payload: MatchRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> MatchResponse:
     if current_user.profile is None:
         raise HTTPException(status_code=400, detail="Create a profile before matching")
     profile = ProfileRead.model_validate(current_user.profile)
-    return MatchingService(db).match(profile)
+    return MatchingService(db).match(profile, user_id=current_user.id, force_refresh=payload.force_refresh)
 
 
 @router.post("/generate-sop")
@@ -85,7 +94,7 @@ def generate_sop(
     if scholarship is None:
         raise HTTPException(status_code=404, detail="Scholarship not found")
     profile = ProfileRead.model_validate(current_user.profile)
-    return {"content": AIService().generate_sop(profile, scholarship)}
+    return {"content": AIService(db).generate_sop(profile, scholarship)}
 
 
 @router.post("/generate-lor")
@@ -100,7 +109,7 @@ def generate_lor(
     if scholarship is None:
         raise HTTPException(status_code=404, detail="Scholarship not found")
     profile = ProfileRead.model_validate(current_user.profile)
-    return {"content": AIService().generate_lor(profile, scholarship)}
+    return {"content": AIService(db).generate_lor(profile, scholarship)}
 
 
 @router.post("/summarize-scholarship")
@@ -112,12 +121,15 @@ def summarize_scholarship(
     scholarship = ScholarshipService(db).get_by_id(payload.scholarship_id)
     if scholarship is None:
         raise HTTPException(status_code=404, detail="Scholarship not found")
-    return {"content": AIService().summarize_scholarship(scholarship)}
+    return {"content": AIService(db).summarize_scholarship(scholarship)}
 
 
 @router.post("/scholarships/structure", response_model=StructuredEligibilityResponse)
-def structure_eligibility(payload: StructureEligibilityRequest) -> StructuredEligibilityResponse:
-    return AIService().structure_eligibility(payload.eligibility_text)
+def structure_eligibility(
+    payload: StructureEligibilityRequest,
+    db: Session = Depends(get_db),
+) -> StructuredEligibilityResponse:
+    return AIService(db).structure_eligibility(payload.eligibility_text)
 
 
 @router.get("/admin/overview", response_model=AdminOverview)
@@ -134,6 +146,23 @@ def admin_sources(
     current_user: User = Depends(get_admin_user),
 ) -> list[ScholarshipSourceConfigRead]:
     return AdminService(db).list_sources()
+
+
+@router.get("/admin/ai-settings", response_model=AdminAISettingsRead)
+def admin_get_ai_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+) -> AdminAISettingsRead:
+    return AdminService(db).get_ai_settings()
+
+
+@router.put("/admin/ai-settings", response_model=AdminAISettingsRead)
+def admin_update_ai_settings(
+    payload: AdminAISettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+) -> AdminAISettingsRead:
+    return AdminService(db).update_ai_settings(payload)
 
 
 @router.get("/admin/crawl-jobs", response_model=list[CrawlJobRead])

@@ -8,11 +8,13 @@ import { useAuthContext } from "@/lib/auth-context";
 import {
   createAdminCrawlJob,
   createAdminRematchJob,
+  getAdminAISettings,
   getAdminJobs,
   getAdminOverview,
   getAdminSources,
+  updateAdminAISettings,
 } from "@/lib/api";
-import { AdminJob, AdminOverview, AdminSource } from "@/lib/types";
+import { AdminAISettings, AdminJob, AdminOverview, AdminSource } from "@/lib/types";
 import { COUNTRIES } from "@/lib/countries";
 
 const emptyOverview: AdminOverview = {
@@ -29,12 +31,32 @@ const emptyOverview: AdminOverview = {
   last_ingestion_at: null,
 };
 
+const emptyAISettings: AdminAISettings = {
+  ai_provider: "openai",
+  ai_fallback_order: [],
+  openai_model: "gpt-4o-mini",
+  cerebras_model: "llama3.1-8b",
+  cerebras_max_completion_tokens: 2048,
+  glm_model: "glm-5",
+  glm_base_url: "https://open.bigmodel.cn/api/paas/v4/",
+  ollama_model: "qwen3:8b",
+  ollama_base_url: "http://localhost:11434",
+  ollama_timeout_seconds: 600,
+  ollama_keep_alive: "30m",
+  llm_match_top_n: 12,
+  llm_match_rule_weight: 0.6,
+  openai_key_configured: false,
+  cerebras_key_configured: false,
+  glm_key_configured: false,
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const { user, loading, handleLogout } = useAuthContext();
   const [overview, setOverview] = useState<AdminOverview>(emptyOverview);
   const [sources, setSources] = useState<AdminSource[]>([]);
   const [jobs, setJobs] = useState<AdminJob[]>([]);
+  const [aiSettings, setAISettings] = useState<AdminAISettings>(emptyAISettings);
   const [countryFilter, setCountryFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [targetUserId, setTargetUserId] = useState("");
@@ -56,11 +78,12 @@ export default function AdminPage() {
       return;
     }
 
-    Promise.all([getAdminOverview(), getAdminSources(), getAdminJobs()])
-      .then(([nextOverview, nextSources, nextJobs]) => {
+    Promise.all([getAdminOverview(), getAdminSources(), getAdminJobs(), getAdminAISettings()])
+      .then(([nextOverview, nextSources, nextJobs, nextAISettings]) => {
         setOverview(nextOverview);
         setSources(nextSources);
         setJobs(nextJobs);
+        setAISettings(nextAISettings);
       })
       .catch((adminError) => {
         setError(adminError instanceof Error ? adminError.message : "Unable to load admin data.");
@@ -248,6 +271,230 @@ export default function AdminPage() {
           </div>
 
           <div className="space-y-6">
+            <section className="rounded-2xl border border-zinc-900/8 bg-white/90 p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">AI Control Plane</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                    Switch providers, tune fallback order, and adjust ranking behavior from the admin panel.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={busyAction === "save-ai"}
+                  onClick={async () => {
+                    setBusyAction("save-ai");
+                    setError("");
+                    try {
+                      const saved = await updateAdminAISettings({
+                        ...aiSettings,
+                        ai_provider: aiSettings.ai_provider.trim().toLowerCase(),
+                        ai_fallback_order: aiSettings.ai_fallback_order
+                          .map((item) => item.trim().toLowerCase())
+                          .filter(Boolean),
+                      });
+                      setAISettings(saved);
+                    } catch (adminError) {
+                      setError(adminError instanceof Error ? adminError.message : "Unable to save AI settings.");
+                    } finally {
+                      setBusyAction("");
+                    }
+                  }}
+                  className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-60"
+                >
+                  {busyAction === "save-ai" ? "Saving..." : "Save AI settings"}
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Primary provider</span>
+                  <select
+                    value={aiSettings.ai_provider}
+                    onChange={(event) => setAISettings((current) => ({ ...current, ai_provider: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  >
+                    {["openai", "cerebras", "glm", "ollama"].map((provider) => (
+                      <option key={provider} value={provider}>
+                        {provider}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Fallback order</span>
+                  <input
+                    value={aiSettings.ai_fallback_order.join(", ")}
+                    onChange={(event) =>
+                      setAISettings((current) => ({
+                        ...current,
+                        ai_fallback_order: event.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                    placeholder="cerebras, glm, openai"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">OpenAI model</span>
+                  <input
+                    value={aiSettings.openai_model}
+                    onChange={(event) => setAISettings((current) => ({ ...current, openai_model: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">GLM model</span>
+                  <input
+                    value={aiSettings.glm_model}
+                    onChange={(event) => setAISettings((current) => ({ ...current, glm_model: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">GLM base URL</span>
+                  <input
+                    value={aiSettings.glm_base_url}
+                    onChange={(event) => setAISettings((current) => ({ ...current, glm_base_url: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Cerebras model</span>
+                  <input
+                    value={aiSettings.cerebras_model}
+                    onChange={(event) => setAISettings((current) => ({ ...current, cerebras_model: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Cerebras max tokens</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={aiSettings.cerebras_max_completion_tokens}
+                    onChange={(event) =>
+                      setAISettings((current) => ({
+                        ...current,
+                        cerebras_max_completion_tokens: Number(event.target.value) || 1,
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Ollama model</span>
+                  <input
+                    value={aiSettings.ollama_model}
+                    onChange={(event) => setAISettings((current) => ({ ...current, ollama_model: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Ollama base URL</span>
+                  <input
+                    value={aiSettings.ollama_base_url}
+                    onChange={(event) => setAISettings((current) => ({ ...current, ollama_base_url: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Ollama timeout seconds</span>
+                  <input
+                    type="number"
+                    min={10}
+                    value={aiSettings.ollama_timeout_seconds}
+                    onChange={(event) =>
+                      setAISettings((current) => ({
+                        ...current,
+                        ollama_timeout_seconds: Number(event.target.value) || 10,
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Ollama keep alive</span>
+                  <input
+                    value={aiSettings.ollama_keep_alive}
+                    onChange={(event) => setAISettings((current) => ({ ...current, ollama_keep_alive: event.target.value }))}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">LLM top N</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={aiSettings.llm_match_top_n}
+                    onChange={(event) =>
+                      setAISettings((current) => ({
+                        ...current,
+                        llm_match_top_n: Number(event.target.value) || 1,
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm">
+                  <span className="font-semibold text-zinc-900">Rule weight</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={1}
+                    step="0.05"
+                    value={aiSettings.llm_match_rule_weight}
+                    onChange={(event) =>
+                      setAISettings((current) => ({
+                        ...current,
+                        llm_match_rule_weight: Number(event.target.value),
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.22em]">
+                <span
+                  className={`rounded-full px-3 py-2 ${
+                    aiSettings.openai_key_configured ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"
+                  }`}
+                >
+                  OpenAI key {aiSettings.openai_key_configured ? "configured" : "missing"}
+                </span>
+                <span
+                  className={`rounded-full px-3 py-2 ${
+                    aiSettings.cerebras_key_configured ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"
+                  }`}
+                >
+                  Cerebras key {aiSettings.cerebras_key_configured ? "configured" : "missing"}
+                </span>
+                <span
+                  className={`rounded-full px-3 py-2 ${
+                    aiSettings.glm_key_configured ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-600"
+                  }`}
+                >
+                  GLM key {aiSettings.glm_key_configured ? "configured" : "missing"}
+                </span>
+              </div>
+            </section>
+
             <section className="rounded-2xl border border-zinc-900/8 bg-white/90 p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">Sources</p>

@@ -1,17 +1,17 @@
-from __future__ import annotations
-
 import logging
 from datetime import datetime, timezone
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.admin import CrawlJob, CrawlJobStatus, CrawlJobType, ScholarshipSourceConfig
+from app.core.config import settings
+from app.models.admin import AdminRuntimeSettings, CrawlJob, CrawlJobStatus, CrawlJobType, ScholarshipSourceConfig
 from app.models.scholarship import Scholarship
 from app.models.user import User
 from app.models.user_scholarship_match import UserScholarshipMatch
-from app.schemas.admin import AdminOverview, CrawlJobCreate, RematchJobCreate
+from app.schemas.admin import AdminAISettingsRead, AdminAISettingsUpdate, AdminOverview, CrawlJobCreate, RematchJobCreate
 from app.schemas.profile import ProfileRead
+from app.services.ai_runtime_settings import ensure_runtime_settings
 from app.services.matching import MatchingService
 
 logger = logging.getLogger(__name__)
@@ -88,6 +88,31 @@ class AdminService:
             last_ingestion_at=last_ingestion_at,
         )
 
+    def get_ai_settings(self) -> AdminAISettingsRead:
+        row = ensure_runtime_settings(self.db)
+        return self._serialize_ai_settings(row)
+
+    def update_ai_settings(self, payload: AdminAISettingsUpdate) -> AdminAISettingsRead:
+        row = ensure_runtime_settings(self.db)
+        row.ai_provider = payload.ai_provider.strip().lower()
+        row.ai_fallback_order = ",".join(self._normalize_fallback_order(payload.ai_fallback_order, row.ai_provider))
+        row.openai_model = payload.openai_model.strip()
+        row.cerebras_model = payload.cerebras_model.strip()
+        row.cerebras_max_completion_tokens = payload.cerebras_max_completion_tokens
+        row.glm_model = payload.glm_model.strip()
+        row.glm_base_url = payload.glm_base_url.strip()
+        row.ollama_model = payload.ollama_model.strip()
+        row.ollama_base_url = payload.ollama_base_url.strip()
+        row.ollama_timeout_seconds = payload.ollama_timeout_seconds
+        row.ollama_keep_alive = payload.ollama_keep_alive.strip()
+        row.llm_match_top_n = payload.llm_match_top_n
+        row.llm_match_rule_weight = str(payload.llm_match_rule_weight)
+        row.updated_at = datetime.now(timezone.utc)
+        self.db.add(row)
+        self.db.commit()
+        self.db.refresh(row)
+        return self._serialize_ai_settings(row)
+
     def create_crawl_job(self, admin_user: User, payload: CrawlJobCreate) -> CrawlJob:
         job_type = CrawlJobType.SOURCE_SYNC.value if payload.source_key else CrawlJobType.GLOBAL_INGEST.value
         job = CrawlJob(
@@ -141,23 +166,37 @@ class AdminService:
 
     def recompute_matches_for_user(self, user: User) -> None:
         profile = ProfileRead.model_validate(user.profile)
-        response = MatchingService(self.db).match(profile)
+        MatchingService(self.db).match(profile, user_id=user.id, force_refresh=True)
 
-        # Bulk delete existing matches
-        self.db.execute(delete(UserScholarshipMatch).where(UserScholarshipMatch.user_id == user.id))
-        self.db.flush()
+    def _serialize_ai_settings(self, row: AdminRuntimeSettings) -> AdminAISettingsRead:
+        fallback = [item.strip() for item in row.ai_fallback_order.split(",") if item.strip()]
+        return AdminAISettingsRead(
+            ai_provider=row.ai_provider,
+            ai_fallback_order=fallback,
+            openai_model=row.openai_model,
+            cerebras_model=row.cerebras_model,
+            cerebras_max_completion_tokens=row.cerebras_max_completion_tokens,
+            glm_model=row.glm_model,
+            glm_base_url=row.glm_base_url,
+            ollama_model=row.ollama_model,
+            ollama_base_url=row.ollama_base_url,
+            ollama_timeout_seconds=row.ollama_timeout_seconds,
+            ollama_keep_alive=row.ollama_keep_alive,
+            llm_match_top_n=row.llm_match_top_n,
+            llm_match_rule_weight=float(row.llm_match_rule_weight),
+            openai_key_configured=bool(settings.openai_api_key),
+            cerebras_key_configured=bool(settings.cerebras_api_key),
+            glm_key_configured=bool(settings.glm_api_key),
+        )
 
-        # Bulk insert new matches
-        now = datetime.now(timezone.utc)
-        new_matches = [
-            UserScholarshipMatch(
-                user_id=user.id,
-                scholarship_id=match.scholarship_id,
-                match_score=match.match_score,
-                missing_requirements=match.missing_requirements,
-                computed_at=now,
-            )
-            for match in response.matches
-        ]
-        self.db.add_all(new_matches)
-        self.db.flush()
+    def _normalize_fallback_order(self, providers: list[str], active_provider: str) -> list[str]:
+        seen: set[str] = set()
+        ordered: list[str] = []
+        normalized_active = active_provider.strip().lower()
+        for provider in providers:
+            normalized = provider.strip().lower()
+            if not normalized or normalized == normalized_active or normalized in seen:
+                continue
+            seen.add(normalized)
+            ordered.append(normalized)
+        return ordered
