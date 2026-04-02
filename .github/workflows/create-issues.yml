@@ -1,0 +1,33 @@
+name: Create GitHub Issues from ISSUES.md
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "copilot/create-issues-from-issues-md"
+    paths:
+      - ".github/scripts/create_issues.py"
+      - ".github/workflows/create-issues.yml"
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  create-issues:
+    name: Create Issues
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Create issues from catalog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python .github/scripts/create_issues.py
