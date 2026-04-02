@@ -12,12 +12,43 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [fullName, setFullName] = useState(user?.full_name || "");
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/sign-in");
     }
   }, [loading, user, router]);
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.full_name || "");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!newPassword && !confirmPassword) {
+      setPasswordError("");
+      return;
+    }
+
+    if (newPassword && confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setPasswordError("Passwords do not match.");
+      } else if (newPassword.length < 8) {
+        setPasswordError("Password must be at least 8 characters long.");
+      } else {
+        setPasswordError("");
+      }
+    } else if (confirmPassword && newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+    } else {
+      setPasswordError("");
+    }
+  }, [newPassword, confirmPassword]);
 
   if (loading) {
     return (
@@ -40,13 +71,16 @@ export default function SettingsPage() {
       return;
     }
 
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const newPassword = formData.get("newPassword") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
-
     // Clear previous messages
     setSuccessMessage("");
     setErrorMessage("");
+
+    // Validate full name if changed
+    const fullNameChanged = fullName !== user?.full_name;
+    if (fullNameChanged && fullName.trim().length < 2) {
+      setErrorMessage("Full name must be at least 2 characters long.");
+      return;
+    }
 
     // Validate password match if either field is filled
     if (newPassword || confirmPassword) {
@@ -61,10 +95,32 @@ export default function SettingsPage() {
       }
     }
 
+    // Prepare payload (for when backend is ready)
+    const payload: Record<string, unknown> = {};
+
+    // Include full name if changed
+    if (fullNameChanged) {
+      payload.full_name = fullName.trim();
+    }
+
+    // Include password if provided
+    if (newPassword) {
+      payload.new_password = newPassword;
+    }
+
+    // Log payload for debugging (remove when backend is ready)
+    if (Object.keys(payload).length > 0) {
+      console.log("Would save settings payload:", payload);
+    }
+
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
       setSuccessMessage("Settings updated successfully.");
+      // Clear password fields after successful save, but keep fullName
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordError("");
     }, 800);
   };
 
@@ -101,7 +157,8 @@ export default function SettingsPage() {
                   id="full-name-input"
                   type="text"
                   name="full_name"
-                  defaultValue={user.full_name}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   placeholder="Your full name"
                 />
@@ -137,8 +194,14 @@ export default function SettingsPage() {
                 <input
                   type="password"
                   name="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   autoComplete="new-password"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
+                  className={`w-full rounded-xl border bg-zinc-50 px-4 py-3 outline-none transition focus:bg-white ${
+                    passwordError
+                      ? "border-red-300 focus:border-red-500"
+                      : "border-zinc-200 focus:border-zinc-900"
+                  }`}
                   placeholder="••••••••"
                 />
               </label>
@@ -148,10 +211,17 @@ export default function SettingsPage() {
                 <input
                   type="password"
                   name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   autoComplete="new-password"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
+                  className={`w-full rounded-xl border bg-zinc-50 px-4 py-3 outline-none transition focus:bg-white ${
+                    passwordError
+                      ? "border-red-300 focus:border-red-500"
+                      : "border-zinc-200 focus:border-zinc-900"
+                  }`}
                   placeholder="••••••••"
                 />
+                {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
               </label>
             </div>
           </div>

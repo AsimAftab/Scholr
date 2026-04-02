@@ -10,6 +10,7 @@ from app.db.session import SessionLocal
 from app.models.admin import ScholarshipSourceConfig
 from app.models.scholarship import Scholarship
 from app.models.user import User
+from app.services.ai_runtime_settings import ensure_runtime_settings
 from app.services.source_registry import SOURCE_CATALOG
 
 
@@ -129,6 +130,7 @@ def seed_database() -> None:
     db: Session = SessionLocal()
     try:
         _ensure_admin_user(db)
+        ensure_runtime_settings(db)
         _sync_source_configs(db)
         _seed_scholarships(db)
     finally:

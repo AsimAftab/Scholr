@@ -7,5 +7,6 @@ pydantic-settings==2.8.1
 python-dotenv==1.1.0
 httpx==0.28.1
 openai==1.70.0
+cerebras-cloud-sdk==1.35.0
 passlib==1.7.4
 email-validator==2.2.0

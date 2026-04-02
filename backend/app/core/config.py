@@ -15,8 +15,22 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, alias="DEBUG")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     database_url: str = Field(alias="DATABASE_URL")
+    ai_provider: str = Field(default="openai", alias="AI_PROVIDER")
+    ai_fallback_order_raw: str = Field(default="", alias="AI_FALLBACK_ORDER")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    cerebras_api_key: str | None = Field(default=None, alias="CEREBRAS_API_KEY")
+    cerebras_model: str = Field(default="llama3.1-8b", alias="CEREBRAS_MODEL")
+    cerebras_max_completion_tokens: int = Field(default=2048, alias="CEREBRAS_MAX_COMPLETION_TOKENS")
+    glm_api_key: str | None = Field(default=None, alias="GLM_API_KEY")
+    glm_model: str = Field(default="glm-5", alias="GLM_MODEL")
+    glm_base_url: str = Field(default="https://open.bigmodel.cn/api/paas/v4/", alias="GLM_BASE_URL")
+    ollama_model: str = Field(default="qwen3:8b", alias="OLLAMA_MODEL")
+    ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
+    ollama_timeout_seconds: int = Field(default=600, alias="OLLAMA_TIMEOUT_SECONDS")
+    ollama_keep_alive: str = Field(default="30m", alias="OLLAMA_KEEP_ALIVE")
+    llm_match_top_n: int = Field(default=12, alias="LLM_MATCH_TOP_N")
+    llm_match_rule_weight: float = Field(default=0.6, alias="LLM_MATCH_RULE_WEIGHT")
     tinyfish_api_key: str | None = Field(default=None, alias="TINYFISH_API_KEY")
     tinyfish_base_url: str = Field(default="https://agent.tinyfish.ai", alias="TINYFISH_BASE_URL")
     tinyfish_timeout_seconds: int = Field(default=180, alias="TINYFISH_TIMEOUT_SECONDS")
@@ -38,6 +52,10 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins_raw.split(",") if origin.strip()]
+
+    @property
+    def ai_fallback_order(self) -> list[str]:
+        return [provider.strip().lower() for provider in self.ai_fallback_order_raw.split(",") if provider.strip()]
 
 
 @lru_cache

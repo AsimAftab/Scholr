@@ -76,3 +76,23 @@ class CrawlJob(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class AdminRuntimeSettings(Base):
+    __tablename__ = "admin_runtime_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, default=1)
+    ai_provider: Mapped[str] = mapped_column(String(50), default="openai")
+    ai_fallback_order: Mapped[str] = mapped_column(Text, default="")
+    openai_model: Mapped[str] = mapped_column(String(120), default="gpt-4o-mini")
+    cerebras_model: Mapped[str] = mapped_column(String(120), default="llama3.1-8b")
+    cerebras_max_completion_tokens: Mapped[int] = mapped_column(Integer, default=2048)
+    glm_model: Mapped[str] = mapped_column(String(120), default="glm-5")
+    glm_base_url: Mapped[str] = mapped_column(String(500), default="https://open.bigmodel.cn/api/paas/v4/")
+    ollama_model: Mapped[str] = mapped_column(String(120), default="qwen3:8b")
+    ollama_base_url: Mapped[str] = mapped_column(String(500), default="http://localhost:11434")
+    ollama_timeout_seconds: Mapped[int] = mapped_column(Integer, default=600)
+    ollama_keep_alive: Mapped[str] = mapped_column(String(50), default="30m")
+    llm_match_top_n: Mapped[int] = mapped_column(Integer, default=12)
+    llm_match_rule_weight: Mapped[str] = mapped_column(String(20), default="0.6")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
