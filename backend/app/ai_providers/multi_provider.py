@@ -7,6 +7,10 @@ class MultiProvider(AIProvider):
     def __init__(self, providers: list[AIProvider]) -> None:
         self.providers = providers
 
+    @staticmethod
+    def _format_unavailable(provider: AIProvider) -> str:
+        return f"{provider.provider_name}: unavailable"
+
     @property
     def is_available(self) -> bool:
         return any(provider.is_available for provider in self.providers)
@@ -25,11 +29,10 @@ class MultiProvider(AIProvider):
         errors: list[str] = []
         for provider in self.providers:
             if not provider.is_available:
-                errors.append(f"{provider.provider_name}: unavailable")
+                errors.append(self._format_unavailable(provider))
                 continue
             try:
                 return provider.generate_text(system_prompt, user_prompt, temperature, expect_json)
-            except Exception as error:
+            except AIProviderError as error:
                 errors.append(f"{provider.provider_name}: {error}")
-                continue
         raise AIProviderError("; ".join(errors) if errors else "No AI providers are configured")

@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
+import { updateAccountSettings } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, loading, handleLogout } = useAuthContext();
+  const { user, loading, handleLogout, setUser } = useAuthContext();
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -64,7 +65,7 @@ export default function SettingsPage() {
 
   // Currently, the backend might not support updating user fields yet,
   // so we'll mock the saving action to provide the UI the user requested.
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (saving) {
@@ -95,7 +96,7 @@ export default function SettingsPage() {
       }
     }
 
-    // Prepare payload (for when backend is ready)
+    // Prepare payload
     const payload: Record<string, unknown> = {};
 
     // Include full name if changed
@@ -108,20 +109,25 @@ export default function SettingsPage() {
       payload.new_password = newPassword;
     }
 
-    // Log payload for debugging (remove when backend is ready)
-    if (Object.keys(payload).length > 0) {
-      console.log("Would save settings payload:", payload);
+    if (Object.keys(payload).length === 0) {
+      setSuccessMessage("No changes to save.");
+      return;
     }
 
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const updatedUser = await updateAccountSettings(payload as { full_name?: string; new_password?: string });
+      setUser(updatedUser);
+      setFullName(updatedUser.full_name);
       setSuccessMessage("Settings updated successfully.");
-      // Clear password fields after successful save, but keep fullName
       setNewPassword("");
       setConfirmPassword("");
       setPasswordError("");
-    }, 800);
+    } catch (saveError) {
+      setErrorMessage(saveError instanceof Error ? saveError.message : "Unable to update settings.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -134,12 +140,20 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-3xl">
         <form onSubmit={handleSave} className="space-y-8 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
           {successMessage && (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800">
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800"
+            >
               {successMessage}
             </div>
           )}
           {errorMessage && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800"
+            >
               {errorMessage}
             </div>
           )}
@@ -159,6 +173,7 @@ export default function SettingsPage() {
                   name="full_name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  aria-label="Full Name"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                   placeholder="Your full name"
                 />
@@ -172,10 +187,12 @@ export default function SettingsPage() {
                   name="email"
                   defaultValue={user.email}
                   disabled
+                  aria-label="Email Address"
+                  aria-describedby="email-help"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-100 px-4 py-3 text-zinc-500 outline-none cursor-not-allowed"
                   placeholder="you@example.com"
                 />
-                <p className="text-xs text-zinc-500">Email address cannot be changed currently.</p>
+                <p id="email-help" className="text-xs text-zinc-500">Email address cannot be changed currently.</p>
               </label>
             </div>
           </div>
@@ -189,14 +206,18 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              <label className="space-y-2 text-sm font-medium text-zinc-900">
+              <label htmlFor="new-password-input" className="space-y-2 text-sm font-medium text-zinc-900">
                 <span>New Password</span>
                 <input
+                  id="new-password-input"
                   type="password"
                   name="newPassword"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   autoComplete="new-password"
+                  aria-label="New Password"
+                  aria-invalid={passwordError ? "true" : "false"}
+                  aria-describedby={passwordError ? "password-error" : undefined}
                   className={`w-full rounded-xl border bg-zinc-50 px-4 py-3 outline-none transition focus:bg-white ${
                     passwordError
                       ? "border-red-300 focus:border-red-500"
@@ -206,14 +227,18 @@ export default function SettingsPage() {
                 />
               </label>
 
-              <label className="space-y-2 text-sm font-medium text-zinc-900">
+              <label htmlFor="confirm-password-input" className="space-y-2 text-sm font-medium text-zinc-900">
                 <span>Confirm New Password</span>
                 <input
+                  id="confirm-password-input"
                   type="password"
                   name="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   autoComplete="new-password"
+                  aria-label="Confirm New Password"
+                  aria-invalid={passwordError ? "true" : "false"}
+                  aria-describedby={passwordError ? "password-error" : undefined}
                   className={`w-full rounded-xl border bg-zinc-50 px-4 py-3 outline-none transition focus:bg-white ${
                     passwordError
                       ? "border-red-300 focus:border-red-500"
@@ -221,7 +246,11 @@ export default function SettingsPage() {
                   }`}
                   placeholder="••••••••"
                 />
-                {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
+                {passwordError && (
+                  <p id="password-error" role="alert" aria-live="assertive" className="text-sm text-red-600">
+                    {passwordError}
+                  </p>
+                )}
               </label>
             </div>
           </div>

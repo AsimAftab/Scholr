@@ -6,6 +6,29 @@ from app.models.scholarship import Scholarship
 from app.schemas.profile import ProfileRead
 
 
+def _academic_profile_summary(profile: ProfileRead) -> dict[str, str | int | float | None]:
+    return {
+        "degree": profile.degree_level,
+        "field_of_study": profile.field_of_study,
+        "gpa": profile.gpa,
+        "target_country": profile.target_country,
+        "passout_year": profile.passout_year,
+        "ielts_score": profile.ielts_score,
+    }
+
+
+def _lor_profile_summary(profile: ProfileRead) -> dict[str, str | int | float | None]:
+    # Recommendation templates do not need direct identifiers; use a generic placeholder.
+    return {
+        "applicant_name": "Student",
+        "degree": profile.degree_level,
+        "field_of_study": profile.field_of_study,
+        "gpa": profile.gpa,
+        "target_country": profile.target_country,
+        "passout_year": profile.passout_year,
+    }
+
+
 def build_structure_eligibility_prompt(eligibility_text: str) -> tuple[str, str, float]:
     system_prompt = "You extract scholarship eligibility into strict JSON."
     user_prompt = (
@@ -22,19 +45,9 @@ def build_structure_eligibility_prompt(eligibility_text: str) -> tuple[str, str,
 def build_sop_prompt(profile: ProfileRead, scholarship: Scholarship) -> tuple[str, str, float]:
     system_prompt = "You write concise, credible scholarship SOP drafts."
 
-    # Selective field serialization - exclude PII (email, DOB, resume URL, internal IDs)
-    applicant_summary = {
-        "degree": profile.degree_level,
-        "field_of_study": profile.field_of_study,
-        "gpa": profile.gpa,
-        "target_country": profile.target_country,
-        "passout_year": profile.passout_year,
-        "ielts_score": profile.ielts_score,
-    }
-
     user_prompt = (
         "Write a concise statement of purpose draft for a scholarship application.\n"
-        f"Applicant: {json.dumps(applicant_summary)}\n"
+        f"Applicant: {json.dumps(_academic_profile_summary(profile))}\n"
         f"Scholarship: {scholarship.title}, {scholarship.country}, {scholarship.eligibility_text}"
     )
     return system_prompt, user_prompt, 0.6
@@ -43,20 +56,9 @@ def build_sop_prompt(profile: ProfileRead, scholarship: Scholarship) -> tuple[st
 def build_lor_prompt(profile: ProfileRead, scholarship: Scholarship) -> tuple[str, str, float]:
     system_prompt = "You write recommendation letter templates for scholarship applications."
 
-    # Selective field serialization - exclude PII (email, DOB, resume URL, internal IDs)
-    # Only include academic credentials needed for recommendation letter
-    applicant_summary = {
-        "name": profile.full_name or "Student",  # Name is needed for the letter
-        "degree": profile.degree_level,
-        "field_of_study": profile.field_of_study,
-        "gpa": profile.gpa,
-        "target_country": profile.target_country,
-        "passout_year": profile.passout_year,
-    }
-
     user_prompt = (
         "Write a recommendation letter template for this scholarship.\n"
-        f"Applicant: {json.dumps(applicant_summary)}\n"
+        f"Applicant: {json.dumps(_lor_profile_summary(profile))}\n"
         f"Scholarship: {scholarship.title}, {scholarship.country}"
     )
     return system_prompt, user_prompt, 0.6
@@ -82,17 +84,6 @@ def build_fit_scoring_prompt(
         "Follow the input facts closely and return strict JSON only."
     )
 
-    # Selective field serialization - only send academic and eligibility-related fields
-    # Exclude PII (email, DOB, resume URL, name, internal IDs, timestamps)
-    scoring_profile = {
-        "degree": profile.degree_level,
-        "field_of_study": profile.field_of_study,
-        "gpa": profile.gpa,
-        "target_country": profile.target_country,
-        "passout_year": profile.passout_year,
-        "ielts_score": profile.ielts_score,
-    }
-
     user_prompt = (
         "You are scoring scholarship fit for a student. "
         "Use the applicant profile, scholarship facts, and current rule-based score as context. "
@@ -100,7 +91,7 @@ def build_fit_scoring_prompt(
         "Return strict JSON with keys fit_score, confidence, positives, risks, missing_items, personalized_reasoning. "
         "fit_score must be 0-100 and reflect overall fit among realistically eligible applicants. "
         "personalized_reasoning must be 2 concise sentences tailored to the user.\n\n"
-        f"Applicant profile:\n{json.dumps(scoring_profile)}\n\n"
+        f"Applicant profile:\n{json.dumps(_academic_profile_summary(profile))}\n\n"
         f"Scholarship:\n"
         f"title={scholarship.title}\n"
         f"country={scholarship.country}\n"

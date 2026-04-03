@@ -9,7 +9,7 @@ This repository contains the frontend application, built as a modern web applica
 *   **Framework:** Next.js (version 14, using the App Router)
 *   **Library:** React 18
 *   **Language:** TypeScript
-*   **Styling:** Tailwind CSS (with custom design tokens like `bark`, `bronze`, `custard`)
+*   **Styling:** Tailwind CSS with a minimal extension layer (currently centered on the default zinc-heavy palette plus the `Inter` font family in `tailwind.config.ts`)
 *   **Validation:** Zod
 
 ## Building and Running
@@ -40,9 +40,12 @@ The project uses standard `npm` scripts as defined in `package.json`.
     *   `api.ts`: API client functions for communicating with the backend (auth, profiles, matching, SOP generation).
     *   `types.ts`: TypeScript type definitions.
     *   `validation.ts`: Zod schemas for data validation.
+*   `providers/`: React context providers, including the auth provider used across app routes.
+*   `public/`: Static assets served by Next.js.
 
 ## Development Conventions
 *   **Routing:** Follows Next.js App Router conventions (`layout.tsx`, `page.tsx`).
-*   **Styling:** Utility-first styling with Tailwind CSS. Custom colors and design tokens are extensively used.
-*   **State & Data Fetching:** Data fetching relies on the custom API client in `lib/api.ts` which uses the native `fetch` API. It includes credential inclusion for authenticated requests.
+*   **Styling:** Utility-first styling with Tailwind CSS. The current UI leans on the neutral zinc palette and does not currently define the broader custom token set referenced in older docs.
+*   **State & Data Fetching:** Data fetching relies on the custom API client in `lib/api.ts`, which centralizes `fetch` defaults, JSON parsing, and API error extraction while including credentials for authenticated requests.
 *   **TypeScript:** Strict typing is enforced across components and API responses.
+*   **Environment:** The frontend expects `NEXT_PUBLIC_API_URL` in `.env.local` (or uses `http://localhost:8000/api/v1` by default).

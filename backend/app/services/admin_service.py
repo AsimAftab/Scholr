@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import settings
 from app.models.admin import AdminRuntimeSettings, CrawlJob, CrawlJobStatus, CrawlJobType, ScholarshipSourceConfig
@@ -89,60 +90,79 @@ class AdminService:
         )
 
     def get_ai_settings(self) -> AdminAISettingsRead:
-        row = ensure_runtime_settings(self.db)
-        return self._serialize_ai_settings(row)
+        try:
+            row = ensure_runtime_settings(self.db)
+            return self._serialize_ai_settings(row)
+        except SQLAlchemyError as error:
+            logger.exception("Failed to load admin AI settings")
+            raise RuntimeError("Unable to load admin AI settings") from error
 
     def update_ai_settings(self, payload: AdminAISettingsUpdate) -> AdminAISettingsRead:
-        row = ensure_runtime_settings(self.db)
-        row.ai_provider = payload.ai_provider.strip().lower()
-        row.ai_fallback_order = ",".join(self._normalize_fallback_order(payload.ai_fallback_order, row.ai_provider))
-        row.openai_model = payload.openai_model.strip()
-        row.cerebras_model = payload.cerebras_model.strip()
-        row.cerebras_max_completion_tokens = payload.cerebras_max_completion_tokens
-        row.glm_model = payload.glm_model.strip()
-        row.glm_base_url = payload.glm_base_url.strip()
-        row.ollama_model = payload.ollama_model.strip()
-        row.ollama_base_url = payload.ollama_base_url.strip()
-        row.ollama_timeout_seconds = payload.ollama_timeout_seconds
-        row.ollama_keep_alive = payload.ollama_keep_alive.strip()
-        row.llm_match_top_n = payload.llm_match_top_n
-        row.llm_match_rule_weight = str(payload.llm_match_rule_weight)
-        row.updated_at = datetime.now(timezone.utc)
-        self.db.add(row)
-        self.db.commit()
-        self.db.refresh(row)
-        return self._serialize_ai_settings(row)
+        try:
+            row = ensure_runtime_settings(self.db)
+            row.ai_provider = payload.ai_provider.strip().lower()
+            row.ai_fallback_order = ",".join(self._normalize_fallback_order(payload.ai_fallback_order, row.ai_provider))
+            row.openai_model = payload.openai_model.strip()
+            row.cerebras_model = payload.cerebras_model.strip()
+            row.cerebras_max_completion_tokens = payload.cerebras_max_completion_tokens
+            row.glm_model = payload.glm_model.strip()
+            row.glm_base_url = payload.glm_base_url.strip()
+            row.ollama_model = payload.ollama_model.strip()
+            row.ollama_base_url = payload.ollama_base_url.strip()
+            row.ollama_timeout_seconds = payload.ollama_timeout_seconds
+            row.ollama_keep_alive = payload.ollama_keep_alive.strip()
+            row.llm_match_top_n = payload.llm_match_top_n
+            row.llm_match_rule_weight = str(payload.llm_match_rule_weight)
+            row.updated_at = datetime.now(timezone.utc)
+            self.db.add(row)
+            self.db.commit()
+            self.db.refresh(row)
+            return self._serialize_ai_settings(row)
+        except SQLAlchemyError as error:
+            self.db.rollback()
+            logger.exception("Failed to update admin AI settings")
+            raise RuntimeError("Unable to update admin AI settings") from error
 
     def create_crawl_job(self, admin_user: User, payload: CrawlJobCreate) -> CrawlJob:
         job_type = CrawlJobType.SOURCE_SYNC.value if payload.source_key else CrawlJobType.GLOBAL_INGEST.value
-        job = CrawlJob(
-            job_type=job_type,
-            status=CrawlJobStatus.PENDING.value,
-            triggered_by_user_id=admin_user.id,
-            source_key=payload.source_key,
-            country_filter=payload.country_filter,
-            region_filter=payload.region_filter,
-            log_output="Job created and waiting for runner.",
-            updated_at=datetime.now(timezone.utc),
-        )
-        self.db.add(job)
-        self.db.commit()
-        self.db.refresh(job)
-        return job
-
-    def create_rematch_job(self, admin_user: User, payload: RematchJobCreate) -> CrawlJob:
-        if payload.all_users:
+        try:
             job = CrawlJob(
-                job_type=CrawlJobType.ALL_USERS_REMATCH.value,
+                job_type=job_type,
                 status=CrawlJobStatus.PENDING.value,
                 triggered_by_user_id=admin_user.id,
-                log_output="Rematch job created and waiting for runner.",
+                source_key=payload.source_key,
+                country_filter=payload.country_filter,
+                region_filter=payload.region_filter,
+                log_output="Job created and waiting for runner.",
                 updated_at=datetime.now(timezone.utc),
             )
             self.db.add(job)
             self.db.commit()
             self.db.refresh(job)
             return job
+        except SQLAlchemyError as error:
+            self.db.rollback()
+            logger.exception("Failed to create crawl job for admin user %s", admin_user.id)
+            raise RuntimeError("Unable to create crawl job") from error
+
+    def create_rematch_job(self, admin_user: User, payload: RematchJobCreate) -> CrawlJob:
+        if payload.all_users:
+            try:
+                job = CrawlJob(
+                    job_type=CrawlJobType.ALL_USERS_REMATCH.value,
+                    status=CrawlJobStatus.PENDING.value,
+                    triggered_by_user_id=admin_user.id,
+                    log_output="Rematch job created and waiting for runner.",
+                    updated_at=datetime.now(timezone.utc),
+                )
+                self.db.add(job)
+                self.db.commit()
+                self.db.refresh(job)
+                return job
+            except SQLAlchemyError as error:
+                self.db.rollback()
+                logger.exception("Failed to create all-users rematch job for admin user %s", admin_user.id)
+                raise RuntimeError("Unable to create rematch job") from error
 
         if payload.user_id is None:
             raise ValueError("user_id is required when all_users is false")
@@ -151,18 +171,27 @@ class AdminService:
         if user is None or user.profile is None:
             raise ValueError("Target user with profile not found")
 
-        job = CrawlJob(
-            job_type=CrawlJobType.USER_REMATCH.value,
-            status=CrawlJobStatus.PENDING.value,
-            triggered_by_user_id=admin_user.id,
-            target_user_id=user.id,
-            log_output="Rematch job created and waiting for runner.",
-            updated_at=datetime.now(timezone.utc),
-        )
-        self.db.add(job)
-        self.db.commit()
-        self.db.refresh(job)
-        return job
+        try:
+            job = CrawlJob(
+                job_type=CrawlJobType.USER_REMATCH.value,
+                status=CrawlJobStatus.PENDING.value,
+                triggered_by_user_id=admin_user.id,
+                target_user_id=user.id,
+                log_output="Rematch job created and waiting for runner.",
+                updated_at=datetime.now(timezone.utc),
+            )
+            self.db.add(job)
+            self.db.commit()
+            self.db.refresh(job)
+            return job
+        except SQLAlchemyError as error:
+            self.db.rollback()
+            logger.exception(
+                "Failed to create user rematch job for admin user %s and target user %s",
+                admin_user.id,
+                user.id,
+            )
+            raise RuntimeError("Unable to create rematch job") from error
 
     def recompute_matches_for_user(self, user: User) -> None:
         profile = ProfileRead.model_validate(user.profile)

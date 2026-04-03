@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import hash_password, sign_session, verify_password, verify_session
 from app.models.user import User
-from app.schemas.auth import UserLogin, UserSignup
+from app.schemas.auth import UserLogin, UserSignup, UserUpdate
 
 
 class AuthService:
@@ -31,6 +31,18 @@ class AuthService:
         user = self.db.scalar(select(User).where(User.email == payload.email.lower()))
         if user is None or not verify_password(payload.password, user.hashed_password):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        return user
+
+    def update_user(self, user: User, payload: UserUpdate) -> User:
+        if payload.full_name is not None:
+            user.full_name = payload.full_name.strip()
+
+        if payload.new_password is not None:
+            user.hashed_password = hash_password(payload.new_password)
+
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
         return user
 
     def set_session_cookie(self, response: Response, user: User) -> None:

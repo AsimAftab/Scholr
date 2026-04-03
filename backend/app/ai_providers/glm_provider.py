@@ -23,6 +23,15 @@ class GLMProvider(AIProvider):
     def provider_name(self) -> str:
         return "glm"
 
+    @staticmethod
+    def _normalize_content(content: object) -> str:
+        if isinstance(content, list):
+            return "".join(
+                part.get("text", "") if isinstance(part, dict) else str(part)
+                for part in content
+            ).strip()
+        return str(content or "").strip()
+
     def generate_text(
         self,
         system_prompt: str,
@@ -32,6 +41,8 @@ class GLMProvider(AIProvider):
     ) -> str:
         if self.client is None:
             raise AIProviderError("GLM provider is not configured")
+        if not self.model:
+            raise AIProviderError("GLM model is not configured")
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -43,10 +54,4 @@ class GLMProvider(AIProvider):
         # Add bounds check before accessing choices[0]
         if not response.choices:
             raise AIProviderError("GLM returned no choices in response")
-        content = response.choices[0].message.content or ""
-        if isinstance(content, list):
-            return "".join(
-                part.get("text", "") if isinstance(part, dict) else str(part)
-                for part in content
-            ).strip()
-        return content.strip()
+        return self._normalize_content(response.choices[0].message.content)

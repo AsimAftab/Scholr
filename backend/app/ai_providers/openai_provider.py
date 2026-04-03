@@ -13,7 +13,7 @@ class OpenAIProvider(AIProvider):
 
     @property
     def is_available(self) -> bool:
-        return self.client is not None
+        return self.client is not None and bool(self.model)
 
     @property
     def provider_name(self) -> str:
@@ -28,6 +28,8 @@ class OpenAIProvider(AIProvider):
     ) -> str:
         if self.client is None:
             raise AIProviderError("OpenAI provider is not configured")
+        if not self.model:
+            raise AIProviderError("OpenAI model is not configured")
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
