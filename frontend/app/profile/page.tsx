@@ -92,11 +92,9 @@ export default function ProfilePage() {
               setProfile(saved);
               setUser({ ...user, profile: saved });
               setSuccessMsg("Profile saved successfully. Your matches have been updated.");
-              setTimeout(() => {
-                if (isMounted.current) {
-                  router.push("/dashboard");
-                }
-              }, 2000);
+              if (isMounted.current) {
+                router.push("/dashboard");
+              }
             } catch (saveError) {
               setError(saveError instanceof Error ? saveError.message : "Unable to save your profile.");
             } finally {

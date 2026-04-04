@@ -1,7 +1,12 @@
 from functools import lru_cache
+from urllib.parse import urlparse
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+VALID_APP_ENVS = {"development", "test", "staging", "production"}
+VALID_AI_PROVIDERS = {"openai", "cerebras", "glm", "ollama", "local"}
+VALID_LOG_LEVELS = {"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"}
 
 
 class Settings(BaseSettings):
@@ -44,6 +49,115 @@ class Settings(BaseSettings):
     admin_email: str | None = Field(default=None, alias="ADMIN_EMAIL")
     admin_password: str | None = Field(default=None, alias="ADMIN_PASSWORD")
     admin_full_name: str = Field(default="Scholr Admin", alias="ADMIN_FULL_NAME")
+
+    @field_validator("app_env", mode="before")
+    @classmethod
+    def validate_app_env(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in VALID_APP_ENVS:
+            valid = ", ".join(sorted(VALID_APP_ENVS))
+            raise ValueError(f"APP_ENV must be one of: {valid}")
+        return normalized
+
+    @field_validator("log_level", mode="before")
+    @classmethod
+    def validate_log_level(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if normalized not in VALID_LOG_LEVELS:
+            valid = ", ".join(sorted(VALID_LOG_LEVELS))
+            raise ValueError(f"LOG_LEVEL must be one of: {valid}")
+        return normalized
+
+    @field_validator("ai_provider", mode="before")
+    @classmethod
+    def validate_ai_provider(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in VALID_AI_PROVIDERS:
+            valid = ", ".join(sorted(VALID_AI_PROVIDERS))
+            raise ValueError(f"AI_PROVIDER must be one of: {valid}")
+        return normalized
+
+    @field_validator("ai_fallback_order_raw", mode="before")
+    @classmethod
+    def validate_ai_fallback_order_raw(cls, value: str) -> str:
+        normalized_items: list[str] = []
+        seen: set[str] = set()
+
+        for provider in value.split(","):
+            normalized = provider.strip().lower()
+            if not normalized:
+                continue
+            if normalized not in VALID_AI_PROVIDERS:
+                valid = ", ".join(sorted(VALID_AI_PROVIDERS))
+                raise ValueError(f"AI_FALLBACK_ORDER entries must be one of: {valid}")
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            normalized_items.append(normalized)
+
+        return ",".join(normalized_items)
+
+    @field_validator(
+        "database_url",
+        "glm_base_url",
+        "ollama_base_url",
+        "tinyfish_base_url",
+        mode="before",
+    )
+    @classmethod
+    def validate_required_url_like_values(cls, value: str, info) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError(f"{info.field_name.upper()} must not be empty")
+
+        parsed = urlparse(normalized)
+        if info.field_name == "database_url":
+            if not parsed.scheme:
+                raise ValueError("DATABASE_URL must include a valid scheme")
+        elif parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            env_name = info.field_name.upper()
+            raise ValueError(f"{env_name} must be a valid http(s) URL")
+
+        return normalized
+
+    @field_validator(
+        "openai_model",
+        "cerebras_model",
+        "glm_model",
+        "ollama_model",
+        "ollama_keep_alive",
+        "session_secret",
+        "session_cookie_name",
+        "admin_full_name",
+        mode="before",
+    )
+    @classmethod
+    def validate_non_empty_strings(cls, value: str, info) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError(f"{info.field_name.upper()} must not be empty")
+        return normalized
+
+    @field_validator(
+        "cerebras_max_completion_tokens",
+        "ollama_timeout_seconds",
+        "llm_match_top_n",
+        "tinyfish_timeout_seconds",
+        "tinyfish_poll_interval_seconds",
+        "tinyfish_batch_size",
+    )
+    @classmethod
+    def validate_positive_integers(cls, value: int, info) -> int:
+        if value <= 0:
+            raise ValueError(f"{info.field_name.upper()} must be greater than 0")
+        return value
+
+    @field_validator("llm_match_rule_weight")
+    @classmethod
+    def validate_llm_match_rule_weight(cls, value: float) -> float:
+        if not 0 <= value <= 1:
+            raise ValueError("LLM_MATCH_RULE_WEIGHT must be between 0 and 1")
+        return value
 
     @property
     def is_production(self) -> bool:

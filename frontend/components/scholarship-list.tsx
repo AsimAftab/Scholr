@@ -68,6 +68,14 @@ type ScholarshipListCardProps = {
 function ScholarshipListCard({ scholarship, match, profile, adminView }: ScholarshipListCardProps) {
   const [sop, setSop] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sopError, setSopError] = useState("");
+  const structuredEligibility = scholarship.structured_eligibility ?? {};
+  const documentRequirements = Array.isArray(structuredEligibility.documents_required)
+    ? structuredEligibility.documents_required
+    : [];
+  const degreeLevels = Array.isArray(structuredEligibility.degree_levels) ? structuredEligibility.degree_levels : [];
+  const eligibleCountries = Array.isArray(scholarship.eligible_countries) ? scholarship.eligible_countries : [];
+  const fieldsOfStudy = Array.isArray(scholarship.field_of_study) ? scholarship.field_of_study : [];
 
   return (
     <article className="rounded-2xl border border-zinc-900/8 bg-white/90 p-6 shadow-sm">
@@ -75,7 +83,7 @@ function ScholarshipListCard({ scholarship, match, profile, adminView }: Scholar
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-950">{scholarship.title}</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            {scholarship.country} • {scholarship.degree} • {scholarship.region ?? "Unspecified region"}
+            {scholarship.country} | {scholarship.degree} | {scholarship.region ?? "Unspecified region"}
           </p>
         </div>
 
@@ -92,53 +100,51 @@ function ScholarshipListCard({ scholarship, match, profile, adminView }: Scholar
       </div>
 
       {match && !adminView ? (
-        <>
-          <div className="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Personalized Fit</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-semibold text-white">
-                  Final {match.match_score}%
-                </span>
-                {match.rule_score != null ? (
-                  <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
-                    Rules {match.rule_score}%
-                  </span>
-                ) : null}
-                {match.llm_score != null ? (
-                  <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
-                    LLM {match.llm_score}%
-                  </span>
-                ) : null}
-                {match.llm_confidence != null ? (
-                  <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
-                    Confidence {match.llm_confidence}%
-                  </span>
-                ) : null}
-              </div>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-zinc-700">{match.personalized_reasoning ?? match.summary}</p>
-            {match.personalized_reasoning && match.summary !== match.personalized_reasoning ? (
-              <p className="mt-3 text-sm leading-6 text-zinc-600">{match.summary}</p>
-            ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {match.missing_requirements.length > 0 ? (
-                match.missing_requirements.map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700"
-                  >
-                    {item}
-                  </span>
-                ))
-              ) : (
+        <div className="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Personalized Fit</p>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-semibold text-white">
+                Final {match.match_score}%
+              </span>
+              {match.rule_score != null ? (
                 <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
-                  No critical gaps detected
+                  Rules {match.rule_score}%
                 </span>
-              )}
+              ) : null}
+              {match.llm_score != null ? (
+                <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
+                  LLM {match.llm_score}%
+                </span>
+              ) : null}
+              {match.llm_confidence != null ? (
+                <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
+                  Confidence {match.llm_confidence}%
+                </span>
+              ) : null}
             </div>
           </div>
-        </>
+          <p className="mt-3 text-sm leading-6 text-zinc-700">{match.personalized_reasoning ?? match.summary}</p>
+          {match.personalized_reasoning && match.summary !== match.personalized_reasoning ? (
+            <p className="mt-3 text-sm leading-6 text-zinc-600">{match.summary}</p>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {match.missing_requirements.length > 0 ? (
+              match.missing_requirements.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700"
+                >
+                  {item}
+                </span>
+              ))
+            ) : (
+              <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
+                No critical gaps detected
+              </span>
+            )}
+          </div>
+        </div>
       ) : null}
 
       <div className="mt-5 grid gap-4 lg:grid-cols-3">
@@ -150,15 +156,10 @@ function ScholarshipListCard({ scholarship, match, profile, adminView }: Scholar
         <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">Requirements</p>
           <p className="mt-3 text-sm text-zinc-700">
-            GPA {scholarship.structured_eligibility.gpa_required ?? "N/A"} • IELTS{" "}
-            {scholarship.structured_eligibility.ielts_required ?? "N/A"}
+            GPA {structuredEligibility.gpa_required ?? "N/A"} | IELTS {structuredEligibility.ielts_required ?? "N/A"}
           </p>
-          <p className="mt-2 text-sm text-zinc-700">
-            Documents: {scholarship.structured_eligibility.documents_required?.join(", ") || "Not specified"}
-          </p>
-          <p className="mt-2 text-sm text-zinc-700">
-            Degree levels: {scholarship.structured_eligibility.degree_levels?.join(", ") || scholarship.degree}
-          </p>
+          <p className="mt-2 text-sm text-zinc-700">Documents: {documentRequirements.join(", ") || "Not specified"}</p>
+          <p className="mt-2 text-sm text-zinc-700">Degree levels: {degreeLevels.join(", ") || scholarship.degree}</p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
@@ -170,13 +171,13 @@ function ScholarshipListCard({ scholarship, match, profile, adminView }: Scholar
             Fully funded: {scholarship.is_fully_funded == null ? "Unknown" : scholarship.is_fully_funded ? "Yes" : "No"}
           </p>
           <p className="mt-2 text-sm text-zinc-700">
-            Eligible countries: {scholarship.eligible_countries.join(", ") || "Not restricted / not specified"}
+            Eligible countries: {eligibleCountries.join(", ") || "Not restricted / not specified"}
           </p>
         </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {scholarship.field_of_study.map((field) => (
+        {fieldsOfStudy.map((field) => (
           <span
             key={field}
             className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700"
@@ -187,14 +188,18 @@ function ScholarshipListCard({ scholarship, match, profile, adminView }: Scholar
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <a
-          href={scholarship.source_url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex text-sm font-semibold text-zinc-900 underline decoration-zinc-300 underline-offset-4"
-        >
-          Open source page
-        </a>
+        {scholarship.source_url ? (
+          <a
+            href={scholarship.source_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex text-sm font-semibold text-zinc-900 underline decoration-zinc-300 underline-offset-4"
+          >
+            Open source page
+          </a>
+        ) : (
+          <span className="text-sm font-semibold text-zinc-400">Source link unavailable</span>
+        )}
 
         {!adminView && profile && match ? (
           <button
@@ -202,8 +207,12 @@ function ScholarshipListCard({ scholarship, match, profile, adminView }: Scholar
             disabled={loading}
             onClick={async () => {
               setLoading(true);
+              setSopError("");
               try {
                 setSop(await generateSop(profile, match.scholarship_id));
+              } catch (error) {
+                setSop("");
+                setSopError(error instanceof Error ? error.message : "Unable to generate SOP draft.");
               } finally {
                 setLoading(false);
               }
@@ -214,6 +223,12 @@ function ScholarshipListCard({ scholarship, match, profile, adminView }: Scholar
           </button>
         ) : null}
       </div>
+
+      {sopError ? (
+        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {sopError}
+        </div>
+      ) : null}
 
       {sop ? (
         <div className="mt-5 rounded-2xl bg-zinc-950 p-4 text-sm leading-6 text-zinc-100">

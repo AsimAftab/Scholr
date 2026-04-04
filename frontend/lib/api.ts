@@ -2,8 +2,17 @@ import { AdminAISettings, AdminJob, AdminOverview, AdminSource, Match, Profile, 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
+type APIErrorPayload = {
+  detail?: unknown;
+  request_id?: unknown;
+};
+
+function buildURL(path: string): string {
+  return `${API_URL}${path}`;
+}
+
+async function fetchAPI(path: string, options?: RequestInit): Promise<Response> {
+  return fetch(buildURL(path), {
     ...options,
     credentials: "include",
     headers: {
@@ -12,26 +21,44 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     },
     cache: "no-store",
   });
+}
 
-  if (!response.ok) {
-    let message = `Request failed: ${response.status}`;
-    try {
-      const payload = (await response.json()) as { detail?: unknown };
-      if (typeof payload.detail === "string") {
-        message = payload.detail;
-      } else if (Array.isArray(payload.detail) && payload.detail.length > 0) {
-        const first = payload.detail[0] as { msg?: string };
-        if (first?.msg) {
-          message = first.msg;
-        }
+async function parseJSON<T>(response: Response): Promise<T> {
+  return response.json() as Promise<T>;
+}
+
+async function extractErrorMessage(response: Response): Promise<string> {
+  let message = `Request failed: ${response.status}`;
+
+  try {
+    const payload = (await parseJSON<APIErrorPayload>(response)) as APIErrorPayload;
+    if (typeof payload.detail === "string") {
+      message = payload.detail;
+    } else if (Array.isArray(payload.detail) && payload.detail.length > 0) {
+      const first = payload.detail[0] as { msg?: string };
+      if (first?.msg) {
+        message = first.msg;
       }
-    } catch {
-      // Keep the default message if the response body is not JSON.
     }
-    throw new Error(message);
+
+    if (typeof payload.request_id === "string" && payload.request_id) {
+      message = `${message} (request_id: ${payload.request_id})`;
+    }
+  } catch {
+    // Keep the default message if the response body is not JSON.
   }
 
-  return response.json() as Promise<T>;
+  return message;
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const response = await fetchAPI(path, options);
+
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response));
+  }
+
+  return parseJSON<T>(response);
 }
 
 export async function createProfile(profile: Profile): Promise<Profile> {
@@ -85,14 +112,24 @@ export async function logout(): Promise<void> {
 }
 
 export async function me(): Promise<User | null> {
-  const response = await fetch(`${API_URL}/auth/me`, { credentials: "include", cache: "no-store" });
+  const response = await fetchAPI("/auth/me");
   if (response.status === 401) {
     return null;
   }
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    throw new Error(await extractErrorMessage(response));
   }
-  return response.json() as Promise<User>;
+  return parseJSON<User>(response);
+}
+
+export async function updateAccountSettings(payload: {
+  full_name?: string;
+  new_password?: string;
+}): Promise<User> {
+  return request<User>("/auth/me", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {

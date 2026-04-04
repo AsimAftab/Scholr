@@ -116,6 +116,7 @@ class AIService:
     ) -> ScholarshipFitAssessment:
         positives: list[str] = []
         risks = list(missing_requirements)
+        scholarship_fields = scholarship.field_of_study if isinstance(scholarship.field_of_study, list) else []
 
         # Safe country comparison with null checks
         if (
@@ -127,11 +128,11 @@ class AIService:
         # Safe field of study comparison with null checks
         if (
             profile.field_of_study
-            and scholarship.field_of_study
+            and scholarship_fields
             and any(
                 field.lower() == profile.field_of_study.lower()
-                for field in scholarship.field_of_study
-                if field  # Guard against None values in the list
+                for field in scholarship_fields
+                if isinstance(field, str) and field
             )
         ):
             positives.append("Field of study aligns directly with the scholarship scope")

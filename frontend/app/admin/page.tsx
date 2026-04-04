@@ -14,7 +14,7 @@ import {
   getAdminSources,
   updateAdminAISettings,
 } from "@/lib/api";
-import { AdminAISettings, AdminJob, AdminOverview, AdminSource } from "@/lib/types";
+import { AdminAISettings, AdminJob, AdminOverview, AdminSource, RemoteAIProvider } from "@/lib/types";
 import { COUNTRIES } from "@/lib/countries";
 
 const emptyOverview: AdminOverview = {
@@ -288,7 +288,7 @@ export default function AdminPage() {
                     try {
                       const saved = await updateAdminAISettings({
                         ...aiSettings,
-                        ai_provider: aiSettings.ai_provider.trim().toLowerCase(),
+                        ai_provider: aiSettings.ai_provider.trim().toLowerCase() as RemoteAIProvider,
                         ai_fallback_order: aiSettings.ai_fallback_order
                           .map((item) => item.trim().toLowerCase())
                           .filter(Boolean),
@@ -311,7 +311,9 @@ export default function AdminPage() {
                   <span className="font-semibold text-zinc-900">Primary provider</span>
                   <select
                     value={aiSettings.ai_provider}
-                    onChange={(event) => setAISettings((current) => ({ ...current, ai_provider: event.target.value }))}
+                    onChange={(event) =>
+                      setAISettings((current) => ({ ...current, ai_provider: event.target.value as RemoteAIProvider }))
+                    }
                     className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-900"
                   >
                     {["openai", "cerebras", "glm", "ollama"].map((provider) => (

@@ -14,7 +14,7 @@ class CerebrasProvider(AIProvider):
 
     @property
     def is_available(self) -> bool:
-        return self.client is not None
+        return self.client is not None and bool(self.model)
 
     @property
     def provider_name(self) -> str:
@@ -29,6 +29,8 @@ class CerebrasProvider(AIProvider):
     ) -> str:
         if self.client is None:
             raise AIProviderError("Cerebras provider is not configured")
+        if not self.model:
+            raise AIProviderError("Cerebras model is not configured")
 
         messages = [
             {"role": "system", "content": system_prompt},

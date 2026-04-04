@@ -36,6 +36,8 @@ docker compose up --build
 docker compose down
 ```
 
+The backend container is expected to become healthy on `http://localhost:8000/ready`, and the frontend uses `NEXT_PUBLIC_API_URL` to reach the API.
+
 **Using PowerShell Scripts:**
 
 The repository includes root-level scripts for quick local setup and execution:
@@ -80,7 +82,7 @@ The repository includes root-level scripts for quick local setup and execution:
 
 *   **Architecture Boundaries:** The backend strictly separates API routes (`api/`), domain logic (`services/`), database models (`models/`), and schemas (`schemas/`). Business logic belongs in `services/`, not route handlers.
 *   **Database Migrations:** Schema changes must be managed via Alembic. Do not use `Base.metadata.create_all()`. Run migrations with `alembic upgrade head`.
-*   **Authentication:** The platform uses signed session cookies. Ensure `SESSION_SECRET` is properly set. The frontend resolves sessions via the `GET /api/v1/auth/me` endpoint.
-*   **Error Handling:** The backend normalizes all API errors into a consistent `{ "detail": "message", "request_id": "uuid" }` JSON format.
+*   **Authentication:** The platform uses signed session cookies. Ensure `SESSION_SECRET` is properly set. The frontend resolves sessions via the `GET /api/v1/auth/me` endpoint and must point `NEXT_PUBLIC_API_URL` at the backend API base.
+*   **Error Handling:** The backend normalizes API errors into a consistent `{ "detail": "message", "request_id": "uuid-or-null" }` JSON shape and also returns the request id in the `X-Request-ID` response header.
 *   **Frontend Styling:** The frontend uses a minimal Tailwind CSS theme with the neutral zinc palette. Custom color tokens (bronze, bark, custard, paprika) were planned but are not currently implemented. Maintain the "serious SaaS" visual direction and avoid generic default styles.
-*   **AI Integration:** AI features (like SOP generation or eligibility structuring) are designed to degrade gracefully to deterministic mock outputs if `OPENAI_API_KEY` is not provided in the environment.
+*   **AI Integration:** AI features use the provider registry configured via `AI_PROVIDER` / `AI_FALLBACK_ORDER` and can run through OpenAI, Cerebras, GLM, or Ollama. If no configured provider is available, AI-dependent flows fall back to deterministic local behavior where implemented (for example scholarship fit scoring, SOP/LOR generation, and eligibility structuring).

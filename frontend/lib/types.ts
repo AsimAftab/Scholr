@@ -1,8 +1,13 @@
+export type DegreeLevel = "Bachelors" | "Masters" | "PhD";
+export type UserRole = "admin" | "user";
+export type AIProvider = "openai" | "cerebras" | "glm" | "ollama" | "local";
+export type RemoteAIProvider = Exclude<AIProvider, "local">;
+
 export type Profile = {
   id?: number;
   country: string;
   target_country: string;
-  degree_level: string;
+  degree_level: DegreeLevel;
   field_of_study?: string;
   passout_year?: number;
   gpa: number;
@@ -64,7 +69,7 @@ export type User = {
   id: number;
   email: string;
   full_name: string;
-  role: string;
+  role: UserRole;
   profile: Profile | null;
 };
 
@@ -120,7 +125,7 @@ export type AdminJob = {
 };
 
 export type AdminAISettings = {
-  ai_provider: string;
+  ai_provider: RemoteAIProvider;
   ai_fallback_order: string[];
   openai_model: string;
   cerebras_model: string;

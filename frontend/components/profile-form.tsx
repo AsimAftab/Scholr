@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ZodError } from "zod";
 
 import { COUNTRIES } from "@/lib/countries";
-import { Profile } from "@/lib/types";
+import { DegreeLevel, Profile } from "@/lib/types";
 import { profileSchema, zodErrors } from "@/lib/validation";
 import { DatePicker } from "@/components/date-picker";
 
@@ -15,6 +15,7 @@ type ProfileFormProps = {
 };
 
 type Tab = "basic" | "academic" | "goals" | "documents";
+type ProfileFormState = Omit<Profile, "gpa"> & { gpa?: number };
 
 const fieldOfStudyCategories = {
   "STEM & Technology": [
@@ -112,16 +113,30 @@ const fieldOfStudyCategories = {
     "Robotics",
   ],
 };
+const allFieldOfStudyOptions = Object.values(fieldOfStudyCategories).flat();
+
+const fieldTabMap: Record<string, Tab> = {
+  country: "basic",
+  gender: "basic",
+  date_of_birth: "basic",
+  passout_year: "academic",
+  gpa: "academic",
+  ielts_score: "academic",
+  target_country: "goals",
+  degree_level: "goals",
+  field_of_study: "goals",
+  resume_url: "documents",
+};
 
 export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProps) {
-  const [form, setForm] = useState<Profile>(initialValue);
+  const [form, setForm] = useState<ProfileFormState>(initialValue);
+  const [gpaInput, setGpaInput] = useState(initialValue.gpa.toString());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("basic");
-  // Create a flat array of all options for the includes check
-  const allFieldOfStudyOptions = Object.values(fieldOfStudyCategories).flat();
   const selectedFieldOfStudy = allFieldOfStudyOptions.includes(form.field_of_study ?? "")
     ? form.field_of_study
-    : form.field_of_study === "Other" || form.field_of_study
+    : form.field_of_study
       ? "Other"
       : "";
   const otherFieldOfStudy =
@@ -131,6 +146,8 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
 
   useEffect(() => {
     setForm(initialValue);
+    setGpaInput(initialValue.gpa.toString());
+    setFormError("");
   }, [initialValue]);
 
   const tabs: { id: Tab; label: string }[] = [
@@ -146,12 +163,27 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
       onSubmit={async (event) => {
         event.preventDefault();
         try {
+          setFormError("");
           // Create a copy of the form data for validation
           const formToValidate = { ...form };
+
+          formToValidate.passout_year = formToValidate.passout_year ?? undefined;
+          formToValidate.ielts_score = formToValidate.ielts_score ?? undefined;
+          formToValidate.gender = formToValidate.gender ?? undefined;
+          formToValidate.date_of_birth = formToValidate.date_of_birth ?? undefined;
+          const normalizedResumeUrl = (formToValidate.resume_url ?? "").trim();
+          formToValidate.resume_url = normalizedResumeUrl === "" ? undefined : normalizedResumeUrl;
 
           // If "Other" is selected but no custom value is entered, set to empty string to trigger validation error
           if (formToValidate.field_of_study === "Other") {
             formToValidate.field_of_study = "";
+          }
+
+          if (gpaInput.trim() === "") {
+            formToValidate.gpa = undefined;
+          } else {
+            const parsedGpa = Number.parseFloat(gpaInput);
+            formToValidate.gpa = Number.isNaN(parsedGpa) ? undefined : parsedGpa;
           }
 
           const payload = profileSchema.parse(formToValidate);
@@ -159,12 +191,23 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           await onSubmit(payload);
         } catch (error) {
           if (error instanceof ZodError) {
-            setErrors(zodErrors(error));
-            // Option to switch to the tab with the first error could be added here
+            const nextErrors = zodErrors(error);
+            setErrors(nextErrors);
+            setFormError("Profile was not saved. Fix the highlighted field and try again.");
+
+            const firstErrorField = Object.keys(nextErrors)[0];
+            if (firstErrorField && fieldTabMap[firstErrorField]) {
+              setActiveTab(fieldTabMap[firstErrorField]);
+            }
           }
         }
       }}
     >
+      {formError ? (
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
+          {formError}
+        </div>
+      ) : null}
       <div className="mb-5">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-500">Profile Setup</p>
         <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-900">Build your fit profile</h2>
@@ -269,39 +312,43 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
               <input
                 className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                 type="number"
-                step="0.1"
+                step="0.01"
                 min="0"
                 max="10"
-                value={String(form.gpa ?? "")}
+                value={gpaInput}
                 onChange={(event) => {
-                  // Handle empty input - reset to 0 (GPA is required field)
-                  if (event.target.value === "") {
-                    setForm((current) => ({ ...current, gpa: 0 }));
+                  const nextValue = event.target.value;
+                  setGpaInput(nextValue);
+
+                  if (nextValue === "") {
+                    setForm((current) => ({ ...current, gpa: undefined }));
                     return;
                   }
 
-                  // Parse as float (better than Number() for decimals)
-                  const value = parseFloat(event.target.value);
-
-                  // Reject NaN values - don't update form state
+                  const value = Number.parseFloat(nextValue);
                   if (Number.isNaN(value)) {
                     return;
                   }
 
-                  // Allow intermediate typing, don't clamp on change
-                  // This allows typing "1.5" without it becoming "10" when typing "15"
                   setForm((current) => ({ ...current, gpa: value }));
                 }}
                 onBlur={(event) => {
-                  // Clamp to valid range on blur (when user leaves the field)
-                  const value = parseFloat(event.target.value);
-                  if (!Number.isNaN(value)) {
-                    if (value > 10) {
-                      setForm((current) => ({ ...current, gpa: 10 }));
-                    } else if (value < 0) {
-                      setForm((current) => ({ ...current, gpa: 0 }));
-                    }
+                  const rawValue = event.target.value.trim();
+                  if (rawValue === "") {
+                    setGpaInput("");
+                    setForm((current) => ({ ...current, gpa: undefined }));
+                    return;
                   }
+
+                  const value = Number.parseFloat(rawValue);
+                  if (Number.isNaN(value)) {
+                    setGpaInput(form.gpa?.toString() ?? "");
+                    return;
+                  }
+
+                  const clampedValue = Math.min(10, Math.max(0, value));
+                  setGpaInput(clampedValue.toString());
+                  setForm((current) => ({ ...current, gpa: clampedValue }));
                 }}
                 placeholder="GPA (e.g., 3.5 or 8.5)"
               />
@@ -377,7 +424,9 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
               <select
                 className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
                 value={form.degree_level ?? ""}
-                onChange={(event) => setForm((current) => ({ ...current, degree_level: event.target.value }))}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, degree_level: event.target.value as DegreeLevel }))
+                }
               >
                 <option value="">Select degree level</option>
                 <option value="Bachelors">Bachelors</option>

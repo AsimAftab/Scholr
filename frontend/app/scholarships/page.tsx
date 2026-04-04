@@ -42,27 +42,39 @@ export default function ScholarshipsPage() {
       return;
     }
 
+    setError("");
+
     if (user.role === "admin") {
+      setMatches([]);
+      setLoadingMatches(true);
       getScholarships()
         .then(setScholarships)
-        .catch(() => setError("Unable to load scholarships."));
+        .catch((loadError) => {
+          setScholarships([]);
+          setError(loadError instanceof Error ? loadError.message : "Unable to load scholarships.");
+        })
+        .finally(() => setLoadingMatches(false));
       return;
     }
 
     if (!user.profile) {
       setScholarships([]);
       setMatches([]);
+      setError("");
       return;
     }
 
     setLoadingMatches(true);
-    setError("");
     Promise.all([getScholarships(), getMatches(user.profile)])
       .then(([nextScholarships, response]) => {
         setScholarships(nextScholarships);
         setMatches(response.matches);
       })
-      .catch(() => setError("Unable to load scholarship matches."))
+      .catch((loadError) => {
+        setScholarships([]);
+        setMatches([]);
+        setError(loadError instanceof Error ? loadError.message : "Unable to load scholarship matches.");
+      })
       .finally(() => setLoadingMatches(false));
   }, [user]);
 
@@ -88,8 +100,8 @@ export default function ScholarshipsPage() {
       ]);
       setScholarships(nextScholarships);
       setMatches(response.matches);
-    } catch {
-      setError("Unable to personalize scholarships right now.");
+    } catch (personalizeError) {
+      setError(personalizeError instanceof Error ? personalizeError.message : "Unable to personalize scholarships right now.");
     } finally {
       setPersonalizing(false);
     }

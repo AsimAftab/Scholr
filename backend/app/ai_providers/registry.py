@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.ai_providers.base import AIProvider
+from app.ai_providers.base import AIProvider, AIProviderError
 from app.ai_providers.cerebras_provider import CerebrasProvider
 from app.ai_providers.glm_provider import GLMProvider
 from app.ai_providers.multi_provider import MultiProvider
@@ -17,6 +17,11 @@ def build_ai_provider(runtime: AIRuntimeSettings) -> AIProvider:
         "glm": GLMProvider,
         "ollama": OllamaProvider,
     }
+    normalized_configured = "ollama" if configured == "local" else configured
+    if normalized_configured not in providers:
+        available = ", ".join(sorted([*providers.keys(), "local"]))
+        raise AIProviderError(f"Unknown AI provider '{runtime.ai_provider}'. Available providers: {available}")
+
     order = _build_provider_order(configured, runtime.ai_fallback_order)
     built: list[AIProvider] = []
     for provider_name in order:
@@ -30,17 +35,11 @@ def build_ai_provider(runtime: AIRuntimeSettings) -> AIProvider:
     if built:
         return MultiProvider(built)
 
-    provider_cls = providers.get(configured)
+    provider_cls = providers.get(normalized_configured)
     if provider_cls is not None:
         return provider_cls(runtime)
-
-    if configured == "local":
-        return OllamaProvider(runtime)
-    if runtime.cerebras_api_key:
-        return CerebrasProvider(runtime)
-    if runtime.glm_api_key:
-        return GLMProvider(runtime)
-    return OpenAIProvider(runtime)
+    available = ", ".join(sorted([*providers.keys(), "local"]))
+    raise AIProviderError(f"Unknown AI provider '{runtime.ai_provider}'. Available providers: {available}")
 
 
 def _build_provider_order(configured: str, fallback_order: list[str]) -> list[str]:

@@ -15,7 +15,7 @@ from app.schemas.admin import (
     ScholarshipSourceConfigRead,
 )
 from app.schemas.ai import ScholarshipActionRequest, StructuredEligibilityResponse, StructureEligibilityRequest
-from app.schemas.auth import AuthResponse, UserLogin, UserRead, UserSignup
+from app.schemas.auth import AuthResponse, UserLogin, UserRead, UserSignup, UserUpdate
 from app.schemas.match import MatchRequest, MatchResponse
 from app.schemas.profile import ProfileCreate, ProfileRead
 from app.schemas.scholarship import ScholarshipRead
@@ -54,6 +54,15 @@ def logout(response: Response) -> dict[str, str]:
 @router.get("/auth/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)) -> UserRead:
     return current_user
+
+
+@router.put("/auth/me", response_model=UserRead)
+def update_me(
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserRead:
+    return AuthService(db).update_user(current_user, payload)
 
 
 @router.post("/profile", response_model=ProfileRead)
@@ -153,7 +162,10 @@ def admin_get_ai_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user),
 ) -> AdminAISettingsRead:
-    return AdminService(db).get_ai_settings()
+    try:
+        return AdminService(db).get_ai_settings()
+    except RuntimeError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
 
 
 @router.put("/admin/ai-settings", response_model=AdminAISettingsRead)
@@ -162,7 +174,10 @@ def admin_update_ai_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user),
 ) -> AdminAISettingsRead:
-    return AdminService(db).update_ai_settings(payload)
+    try:
+        return AdminService(db).update_ai_settings(payload)
+    except RuntimeError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
 
 
 @router.get("/admin/crawl-jobs", response_model=list[CrawlJobRead])
@@ -179,7 +194,10 @@ def admin_create_crawl_job(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user),
 ) -> CrawlJob:
-    return AdminService(db).create_crawl_job(current_user, payload)
+    try:
+        return AdminService(db).create_crawl_job(current_user, payload)
+    except RuntimeError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
 
 
 @router.post("/admin/rematch-jobs", response_model=CrawlJobRead)
@@ -192,3 +210,5 @@ def admin_create_rematch_job(
         return AdminService(db).create_rematch_job(current_user, payload)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
+    except RuntimeError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error

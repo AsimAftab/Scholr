@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -10,7 +10,9 @@ from app.db.base import Base
 
 class UserScholarshipMatch(Base):
     __tablename__ = "user_scholarship_matches"
-    __table_args__ = (UniqueConstraint("user_id", "scholarship_id", name="uq_user_scholarship_match"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "scholarship_id", name="uq_user_scholarship_match"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
@@ -23,4 +25,8 @@ class UserScholarshipMatch(Base):
     match_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     personalized_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
     missing_requirements: Mapped[list[str]] = mapped_column(JSON)
-    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+    )
