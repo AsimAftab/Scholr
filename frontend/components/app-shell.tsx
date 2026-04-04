@@ -13,9 +13,11 @@ type AppShellProps = {
   subtitle: string;
   onLogout: () => Promise<void>;
   children: React.ReactNode;
+  compact?: boolean;
+  lockViewport?: boolean;
 };
 
-export function AppShell({ user, title, subtitle, onLogout, children }: AppShellProps) {
+export function AppShell({ user, title, subtitle, onLogout, children, compact = false, lockViewport = false }: AppShellProps) {
   const pathname = usePathname();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const navItems =
@@ -48,7 +50,7 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
   };
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
+    <div className={`min-h-screen lg:grid lg:grid-cols-[280px_1fr] ${lockViewport ? "lg:h-screen lg:overflow-hidden" : ""}`}>
       <aside className="lg:sticky lg:top-0 lg:h-screen border-r border-zinc-900/8 bg-zinc-950 px-6 py-8 text-white lg:overflow-y-auto">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-black tracking-tighter text-white">SCHOLR.</span>
@@ -90,14 +92,14 @@ export function AppShell({ user, title, subtitle, onLogout, children }: AppShell
         </button>
       </aside>
 
-      <div className="min-w-0">
-        <header className="border-b border-zinc-900/8 bg-white/75 px-6 py-6 backdrop-blur-xl md:px-10">
+      <div className={`min-w-0 ${lockViewport ? "lg:flex lg:h-screen lg:flex-col lg:overflow-hidden" : ""}`}>
+        <header className={`border-b border-zinc-900/8 bg-white/75 backdrop-blur-xl ${compact ? "px-6 py-4 md:px-8" : "px-6 py-6 md:px-10"}`}>
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-500">Scholr app</p>
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-zinc-900">{title}</h1>
-          <p className="mt-3 max-w-3xl text-base leading-7 text-zinc-600">{subtitle}</p>
+          <h1 className={`mt-3 font-extrabold tracking-tight text-zinc-900 ${compact ? "text-3xl" : "text-4xl"}`}>{title}</h1>
+          <p className={`mt-3 max-w-3xl text-zinc-600 ${compact ? "text-sm leading-6" : "text-base leading-7"}`}>{subtitle}</p>
         </header>
 
-        <main className="px-6 py-8 md:px-10">{children}</main>
+        <main className={`${compact ? "px-6 py-5 md:px-8" : "px-6 py-8 md:px-10"} ${lockViewport ? "flex-1 overflow-hidden" : ""}`}>{children}</main>
       </div>
 
       <ConfirmDialog
