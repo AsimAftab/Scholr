@@ -69,6 +69,8 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
+**No built-in tests yet** — integration and unit tests are planned.
+
 ### Frontend (Manual)
 
 **Important:** The frontend has been migrated to use Bun instead of npm.
@@ -82,6 +84,13 @@ bun run dev
 bun run build
 bun start
 ```
+
+**Linting:**
+```bash
+bun run lint
+```
+
+**No built-in tests yet** — Jest/React Testing Library setup is planned.
 
 ### Crawler (Manual)
 
