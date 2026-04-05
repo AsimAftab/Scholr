@@ -23,71 +23,83 @@ class AdminService:
         self.db = db
 
     def list_sources(self) -> list[ScholarshipSourceConfig]:
-        return list(
-            self.db.scalars(
-                select(ScholarshipSourceConfig).order_by(
-                    ScholarshipSourceConfig.region,
-                    ScholarshipSourceConfig.country,
-                    ScholarshipSourceConfig.source_name,
-                )
-            ).all()
-        )
+        try:
+            return list(
+                self.db.scalars(
+                    select(ScholarshipSourceConfig).order_by(
+                        ScholarshipSourceConfig.region,
+                        ScholarshipSourceConfig.country,
+                        ScholarshipSourceConfig.source_name,
+                    )
+                ).all()
+            )
+        except SQLAlchemyError as error:
+            logger.exception("Failed to list scholarship sources")
+            raise RuntimeError("Unable to load sources") from error
 
     def list_jobs(self) -> list[CrawlJob]:
-        return list(self.db.scalars(select(CrawlJob).order_by(CrawlJob.created_at.desc())).all())
+        try:
+            return list(self.db.scalars(select(CrawlJob).order_by(CrawlJob.created_at.desc())).all())
+        except SQLAlchemyError as error:
+            logger.exception("Failed to list crawl jobs")
+            raise RuntimeError("Unable to load jobs") from error
 
     def get_overview(self) -> AdminOverview:
-        total_sources = self.db.scalar(select(func.count()).select_from(ScholarshipSourceConfig)) or 0
-        enabled_sources = (
-            self.db.scalar(
-                select(func.count()).select_from(ScholarshipSourceConfig).where(ScholarshipSourceConfig.enabled.is_(True))
+        try:
+            total_sources = self.db.scalar(select(func.count()).select_from(ScholarshipSourceConfig)) or 0
+            enabled_sources = (
+                self.db.scalar(
+                    select(func.count()).select_from(ScholarshipSourceConfig).where(ScholarshipSourceConfig.enabled.is_(True))
+                )
+                or 0
             )
-            or 0
-        )
-        total_jobs = self.db.scalar(select(func.count()).select_from(CrawlJob)) or 0
-        pending_jobs = (
-            self.db.scalar(select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.PENDING.value))
-            or 0
-        )
-        running_jobs = (
-            self.db.scalar(select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.RUNNING.value))
-            or 0
-        )
-        completed_jobs = (
-            self.db.scalar(
-                select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.COMPLETED.value)
+            total_jobs = self.db.scalar(select(func.count()).select_from(CrawlJob)) or 0
+            pending_jobs = (
+                self.db.scalar(select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.PENDING.value))
+                or 0
             )
-            or 0
-        )
-        failed_jobs = (
-            self.db.scalar(select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.FAILED.value))
-            or 0
-        )
-        total_match_snapshots = self.db.scalar(select(func.count()).select_from(UserScholarshipMatch)) or 0
-        
-        total_users = self.db.scalar(select(func.count()).select_from(User)) or 0
-        total_scholarships = self.db.scalar(select(func.count()).select_from(Scholarship)) or 0
-        last_ingestion_at = self.db.scalar(
-            select(func.max(CrawlJob.finished_at))
-            .where(
-                CrawlJob.status == CrawlJobStatus.COMPLETED.value,
-                CrawlJob.job_type.in_([CrawlJobType.GLOBAL_INGEST.value, CrawlJobType.SOURCE_SYNC.value])
+            running_jobs = (
+                self.db.scalar(select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.RUNNING.value))
+                or 0
             )
-        )
+            completed_jobs = (
+                self.db.scalar(
+                    select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.COMPLETED.value)
+                )
+                or 0
+            )
+            failed_jobs = (
+                self.db.scalar(select(func.count()).select_from(CrawlJob).where(CrawlJob.status == CrawlJobStatus.FAILED.value))
+                or 0
+            )
+            total_match_snapshots = self.db.scalar(select(func.count()).select_from(UserScholarshipMatch)) or 0
+            
+            total_users = self.db.scalar(select(func.count()).select_from(User)) or 0
+            total_scholarships = self.db.scalar(select(func.count()).select_from(Scholarship)) or 0
+            last_ingestion_at = self.db.scalar(
+                select(func.max(CrawlJob.finished_at))
+                .where(
+                    CrawlJob.status == CrawlJobStatus.COMPLETED.value,
+                    CrawlJob.job_type.in_([CrawlJobType.GLOBAL_INGEST.value, CrawlJobType.SOURCE_SYNC.value])
+                )
+            )
 
-        return AdminOverview(
-            total_sources=total_sources,
-            enabled_sources=enabled_sources,
-            total_jobs=total_jobs,
-            pending_jobs=pending_jobs,
-            running_jobs=running_jobs,
-            completed_jobs=completed_jobs,
-            failed_jobs=failed_jobs,
-            total_match_snapshots=total_match_snapshots,
-            total_users=total_users,
-            total_scholarships=total_scholarships,
-            last_ingestion_at=last_ingestion_at,
-        )
+            return AdminOverview(
+                total_sources=total_sources,
+                enabled_sources=enabled_sources,
+                total_jobs=total_jobs,
+                pending_jobs=pending_jobs,
+                running_jobs=running_jobs,
+                completed_jobs=completed_jobs,
+                failed_jobs=failed_jobs,
+                total_match_snapshots=total_match_snapshots,
+                total_users=total_users,
+                total_scholarships=total_scholarships,
+                last_ingestion_at=last_ingestion_at,
+            )
+        except SQLAlchemyError as error:
+            logger.exception("Failed to generate admin overview")
+            raise RuntimeError("Unable to load dashboard overview") from error
 
     def get_ai_settings(self) -> AdminAISettingsRead:
         try:
@@ -194,6 +206,10 @@ class AdminService:
             raise RuntimeError("Unable to create rematch job") from error
 
     def recompute_matches_for_user(self, user: User) -> None:
+        if user.profile is None:
+            logger.warning("Attempted to recompute matches for user %s without a profile; skipping", user.id)
+            return
+
         profile = ProfileRead.model_validate(user.profile)
         MatchingService(self.db).match(profile, user_id=user.id, force_refresh=True)
 
@@ -212,7 +228,7 @@ class AdminService:
             ollama_timeout_seconds=row.ollama_timeout_seconds,
             ollama_keep_alive=row.ollama_keep_alive,
             llm_match_top_n=row.llm_match_top_n,
-            llm_match_rule_weight=float(row.llm_match_rule_weight),
+            llm_match_rule_weight=row.llm_match_rule_weight,
             openai_key_configured=bool(settings.openai_api_key),
             cerebras_key_configured=bool(settings.cerebras_api_key),
             glm_key_configured=bool(settings.glm_api_key),

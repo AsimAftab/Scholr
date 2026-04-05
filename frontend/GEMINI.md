@@ -46,6 +46,6 @@ The project uses standard `npm` scripts as defined in `package.json`.
 ## Development Conventions
 *   **Routing:** Follows Next.js App Router conventions (`layout.tsx`, `page.tsx`).
 *   **Styling:** Utility-first styling with Tailwind CSS. The current UI leans on the neutral zinc palette and does not currently define the broader custom token set referenced in older docs.
-*   **State & Data Fetching:** Data fetching relies on the custom API client in `lib/api.ts`, which centralizes `fetch` defaults, JSON parsing, and API error extraction while including credentials for authenticated requests.
-*   **TypeScript:** Strict typing is enforced across components and API responses.
+*   **State & Data Fetching:** Data fetching relies on the custom API client in `lib/api.ts`, which centralizes `fetch` defaults, JSON parsing, and robust error extraction (including Pydantic field-error mapping and Request ID propagation). Components like `ScholarshipList` and `ProfileForm` include defensive null guards to handle incomplete data safely.
+*   **TypeScript:** Strict typing is enforced across components and API responses. Administrative entities (Jobs, Sources) use literal unions for statuses and types to ensure compile-time safety.
 *   **Environment:** The frontend expects `NEXT_PUBLIC_API_URL` in `.env.local` (or uses `http://localhost:8000/api/v1` by default).

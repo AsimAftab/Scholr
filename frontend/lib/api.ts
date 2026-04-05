@@ -35,14 +35,20 @@ async function extractErrorMessage(response: Response): Promise<string> {
     if (typeof payload.detail === "string") {
       message = payload.detail;
     } else if (Array.isArray(payload.detail) && payload.detail.length > 0) {
-      const first = payload.detail[0] as { msg?: string };
+      const first = payload.detail[0] as { msg?: string; loc?: string[]; type?: string };
       if (first?.msg) {
-        message = first.msg;
+        // Handle Pydantic-style validation errors
+        const loc_prefix = first.loc ? `${first.loc.join(".")} ` : "";
+        message = `${loc_prefix}${first.msg}`;
       }
+    } else if (payload.detail && typeof payload.detail === "object") {
+      // Handle generic object errors
+      message = JSON.stringify(payload.detail);
     }
 
-    if (typeof payload.request_id === "string" && payload.request_id) {
-      message = `${message} (request_id: ${payload.request_id})`;
+    const requestId = payload.request_id || response.headers.get("X-Request-ID");
+    if (typeof requestId === "string" && requestId) {
+      message = `${message} (RID: ${requestId.slice(0, 8)})`;
     }
   } catch {
     // Keep the default message if the response body is not JSON.
@@ -72,8 +78,7 @@ export async function getScholarships(): Promise<Scholarship[]> {
   return request<Scholarship[]>("/scholarships");
 }
 
-export async function getMatches(profile: Profile, forceRefresh = false): Promise<{ matches: Match[] }> {
-  void profile;
+export async function getMatches(forceRefresh = false): Promise<{ matches: Match[] }> {
   return request<{ matches: Match[] }>("/match", {
     method: "POST",
     body: JSON.stringify({ force_refresh: forceRefresh }),

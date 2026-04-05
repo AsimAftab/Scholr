@@ -94,5 +94,5 @@ class AdminRuntimeSettings(Base):
     ollama_timeout_seconds: Mapped[int] = mapped_column(Integer, default=600)
     ollama_keep_alive: Mapped[str] = mapped_column(String(50), default="30m")
     llm_match_top_n: Mapped[int] = mapped_column(Integer, default=12)
-    llm_match_rule_weight: Mapped[str] = mapped_column(String(20), default="0.6")
+    llm_match_rule_weight: Mapped[float] = mapped_column(Float, default=0.6)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

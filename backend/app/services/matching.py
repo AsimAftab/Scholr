@@ -97,18 +97,22 @@ class MatchingService:
         score = 0
         missing: list[str] = []
 
-        if scholarship.country.lower() == profile.target_country.lower():
+        # Defensive null checks for profile fields
+        target_country = (profile.target_country or "").lower()
+        scholarship_country = (scholarship.country or "").lower()
+        if scholarship_country and target_country == scholarship_country:
             score += 30
 
         degree_levels = structured.get("degree_levels") or []
         degree_candidates = [scholarship.degree, *degree_levels]
-        if any(candidate.lower() == profile.degree_level.lower() for candidate in degree_candidates if candidate):
+        profile_degree = (profile.degree_level or "").lower()
+        if profile_degree and any(candidate.lower() == profile_degree for candidate in degree_candidates if candidate):
             score += 20
         else:
             missing.append(f"Degree preference differs: {scholarship.degree}")
 
         required_gpa = structured.get("gpa_required")
-        if required_gpa is None or profile.gpa >= required_gpa:
+        if required_gpa is None or (profile.gpa is not None and profile.gpa >= required_gpa):
             score += 25
         else:
             missing.append(f"GPA requirement not met ({required_gpa})")
@@ -120,7 +124,8 @@ class MatchingService:
             missing.append(f"IELTS requirement not met ({required_ielts})")
 
         countries_allowed = structured.get("countries_allowed", [])
-        if not countries_allowed or profile.country.lower() in [country.lower() for country in countries_allowed]:
+        profile_country = (profile.country or "").lower()
+        if not countries_allowed or (profile_country and profile_country in [country.lower() for country in countries_allowed if country]):
             score += 10
         else:
             missing.append("Applicant nationality may be ineligible")

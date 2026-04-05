@@ -8,7 +8,7 @@ const REQUIRED_PROFILE_FIELDS: Array<keyof Profile> = [
   "gpa",
 ];
 
-function hasValue(value: Profile[keyof Profile]) {
+function hasValue(value: Profile[keyof Profile]): boolean {
   if (typeof value === "string") {
     return value.trim().length > 0;
   }
@@ -22,7 +22,7 @@ function hasValue(value: Profile[keyof Profile]) {
 
 export function getMissingRequiredProfileFields(profile: Profile | null | undefined) {
   if (!profile) {
-    return REQUIRED_PROFILE_FIELDS;
+    return [...REQUIRED_PROFILE_FIELDS];
   }
 
   return REQUIRED_PROFILE_FIELDS.filter((field) => !hasValue(profile[field]));

@@ -17,7 +17,7 @@ class UserScholarshipMatch(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     scholarship_id: Mapped[int] = mapped_column(ForeignKey("scholarships.id"), index=True)
-    match_score: Mapped[int] = mapped_column(Integer, index=True)
+    match_score: Mapped[int] = mapped_column(Integer, index=True, default=0)
     rule_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     llm_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     llm_confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -30,3 +30,6 @@ class UserScholarshipMatch(Base):
         default=lambda: datetime.now(timezone.utc),
         index=True,
     )
+
+    def __repr__(self) -> str:
+        return f"<UserScholarshipMatch(id={self.id}, user_id={self.user_id}, scholarship_id={self.scholarship_id}, score={self.match_score})>"

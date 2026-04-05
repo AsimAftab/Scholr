@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ZodError } from "zod";
 
 import { COUNTRIES } from "@/lib/countries";
@@ -130,23 +130,27 @@ const fieldTabMap: Record<string, Tab> = {
 
 export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProps) {
   const [form, setForm] = useState<ProfileFormState>(initialValue);
-  const [gpaInput, setGpaInput] = useState(initialValue.gpa.toString());
+  const [gpaInput, setGpaInput] = useState(initialValue.gpa?.toString() ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("basic");
-  const selectedFieldOfStudy = allFieldOfStudyOptions.includes(form.field_of_study ?? "")
-    ? form.field_of_study
-    : form.field_of_study
-      ? "Other"
-      : "";
-  const otherFieldOfStudy =
-    selectedFieldOfStudy === "Other" && !allFieldOfStudyOptions.includes(form.field_of_study ?? "") && form.field_of_study !== "Other"
-      ? form.field_of_study ?? ""
-      : "";
+  const selectedFieldOfStudy = useMemo(() => {
+    if (allFieldOfStudyOptions.includes(form.field_of_study ?? "")) {
+      return form.field_of_study;
+    }
+    return form.field_of_study ? "Other" : "";
+  }, [form.field_of_study]);
+
+  const otherFieldOfStudy = useMemo(() => {
+    if (selectedFieldOfStudy === "Other" && form.field_of_study !== "Other") {
+      return form.field_of_study ?? "";
+    }
+    return "";
+  }, [selectedFieldOfStudy, form.field_of_study]);
 
   useEffect(() => {
     setForm(initialValue);
-    setGpaInput(initialValue.gpa.toString());
+    setGpaInput(initialValue.gpa?.toString() ?? "");
     setFormError("");
   }, [initialValue]);
 
@@ -311,13 +315,15 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
               <span>GPA</span>
               <input
                 className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 outline-none transition focus:border-zinc-900 focus:bg-white"
-                type="number"
-                step="0.01"
-                min="0"
-                max="10"
+                type="text"
+                inputMode="decimal"
                 value={gpaInput}
                 onChange={(event) => {
                   const nextValue = event.target.value;
+                  // Allow empty, numbers, and at most one dot
+                  if (nextValue !== "" && !/^\d*\.?\d*$/.test(nextValue)) {
+                    return;
+                  }
                   setGpaInput(nextValue);
 
                   if (nextValue === "") {
@@ -326,10 +332,11 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                   }
 
                   const value = Number.parseFloat(nextValue);
-                  if (Number.isNaN(value)) {
+                  if (Number.isNaN(value) || !Number.isFinite(value)) {
                     return;
                   }
 
+                  // Update form state with the raw value, but don't clamp yet
                   setForm((current) => ({ ...current, gpa: value }));
                 }}
                 onBlur={(event) => {
@@ -347,7 +354,9 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                   }
 
                   const clampedValue = Math.min(10, Math.max(0, value));
-                  setGpaInput(clampedValue.toString());
+                  // Normalize to string and update both states
+                  const formattedValue = clampedValue.toString();
+                  setGpaInput(formattedValue);
                   setForm((current) => ({ ...current, gpa: clampedValue }));
                 }}
                 placeholder="GPA (e.g., 3.5 or 8.5)"

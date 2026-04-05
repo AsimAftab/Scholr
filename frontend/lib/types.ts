@@ -103,10 +103,13 @@ export type AdminSource = {
   last_error: string | null;
 };
 
+export type AdminJobType = "global_ingest" | "source_sync" | "user_rematch" | "all_users_rematch";
+export type AdminJobStatus = "pending" | "running" | "completed" | "failed";
+
 export type AdminJob = {
   id: number;
-  job_type: string;
-  status: string;
+  job_type: AdminJobType;
+  status: AdminJobStatus;
   triggered_by_user_id: number | null;
   target_user_id: number | null;
   source_key: string | null;
