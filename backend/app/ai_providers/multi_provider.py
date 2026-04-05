@@ -33,6 +33,6 @@ class MultiProvider(AIProvider):
                 continue
             try:
                 return provider.generate_text(system_prompt, user_prompt, temperature, expect_json)
-            except AIProviderError as error:
+            except Exception as error:  # Catch all exceptions to ensure fallback
                 errors.append(f"{provider.provider_name}: {error}")
         raise AIProviderError("; ".join(errors) if errors else "No AI providers are configured")

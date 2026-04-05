@@ -47,6 +47,7 @@ class CerebrasProvider(AIProvider):
                 max_completion_tokens=self.max_completion_tokens,
                 temperature=temperature,
                 top_p=1,
+                timeout=30.0,
             )
         except Exception as error:
             raise AIProviderError(f"Cerebras provider request failed: {error}") from error

@@ -37,7 +37,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // Only fetch matches for non-admin users with profiles
     if (user?.role !== "admin" && user?.profile) {
-      getMatches(user.profile)
+      getMatches()
         .then((response) => setMatches(response.matches))
         .catch(() => setError("Unable to load scholarship matches."));
     } else {

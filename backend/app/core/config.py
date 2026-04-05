@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 from urllib.parse import urlparse
 
 from pydantic import Field, field_validator
@@ -18,9 +19,9 @@ class Settings(BaseSettings):
 
     app_env: str = Field(default="development", alias="APP_ENV")
     debug: bool = Field(default=False, alias="DEBUG")
-    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    log_level: Literal["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"] = Field(default="INFO", alias="LOG_LEVEL")
     database_url: str = Field(alias="DATABASE_URL")
-    ai_provider: str = Field(default="openai", alias="AI_PROVIDER")
+    ai_provider: Literal["openai", "cerebras", "glm", "ollama", "local"] = Field(default="openai", alias="AI_PROVIDER")
     ai_fallback_order_raw: str = Field(default="", alias="AI_FALLBACK_ORDER")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")

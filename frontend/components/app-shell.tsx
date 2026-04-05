@@ -14,6 +14,10 @@ type AppShellProps = {
   onLogout: () => Promise<void>;
   children: React.ReactNode;
   compact?: boolean;
+  /**
+   * Locks the viewport to screen height on large screens.
+   * When enabled, children must implement their own scroll containers.
+   */
   lockViewport?: boolean;
 };
 
@@ -99,7 +103,7 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
           <p className={`mt-3 max-w-3xl text-zinc-600 ${compact ? "text-sm leading-6" : "text-base leading-7"}`}>{subtitle}</p>
         </header>
 
-        <main className={`${compact ? "px-6 py-5 md:px-8" : "px-6 py-8 md:px-10"} ${lockViewport ? "flex-1 overflow-hidden" : ""}`}>{children}</main>
+        <main className={`${compact ? "px-6 py-5 md:px-8" : "px-6 py-8 md:px-10"} ${lockViewport ? "flex-1 lg:overflow-hidden" : ""}`}>{children}</main>
       </div>
 
       <ConfirmDialog

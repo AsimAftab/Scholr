@@ -15,14 +15,16 @@ type ScholarshipListProps = {
 };
 
 export function ScholarshipList({
-  scholarships,
-  matches,
+  scholarships = [],
+  matches = [],
   profile,
   title,
   emptyMessage,
   adminView = false,
 }: ScholarshipListProps) {
-  const matchLookup = new Map(matches.map((match) => [match.scholarship_id, match]));
+  const safeScholarships = scholarships || [];
+  const safeMatches = matches || [];
+  const matchLookup = new Map(safeMatches.map((match) => [match.scholarship_id, match]));
 
   return (
     <section className="space-y-4">
@@ -39,7 +41,7 @@ export function ScholarshipList({
         </div>
       ) : null}
 
-      {scholarships.map((scholarship) => (
+      {safeScholarships.map((scholarship) => (
         <ScholarshipListCard
           key={scholarship.id}
           scholarship={scholarship}
@@ -49,7 +51,7 @@ export function ScholarshipList({
         />
       ))}
 
-      {scholarships.length === 0 ? (
+      {safeScholarships.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 bg-white/80 p-10 text-center text-zinc-500 shadow-sm">
           No scholarships available right now.
         </div>

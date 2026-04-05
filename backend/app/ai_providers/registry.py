@@ -20,7 +20,7 @@ def build_ai_provider(runtime: AIRuntimeSettings) -> AIProvider:
     normalized_configured = "ollama" if configured == "local" else configured
     if normalized_configured not in providers:
         available = ", ".join(sorted([*providers.keys(), "local"]))
-        raise AIProviderError(f"Unknown AI provider '{runtime.ai_provider}'. Available providers: {available}")
+        raise ValueError(f"Unknown AI provider '{runtime.ai_provider}'. Available providers: {available}")
 
     order = _build_provider_order(configured, runtime.ai_fallback_order)
     built: list[AIProvider] = []
@@ -39,7 +39,7 @@ def build_ai_provider(runtime: AIRuntimeSettings) -> AIProvider:
     if provider_cls is not None:
         return provider_cls(runtime)
     available = ", ".join(sorted([*providers.keys(), "local"]))
-    raise AIProviderError(f"Unknown AI provider '{runtime.ai_provider}'. Available providers: {available}")
+    raise ValueError(f"Unknown AI provider '{runtime.ai_provider}'. Available providers: {available}")
 
 
 def _build_provider_order(configured: str, fallback_order: list[str]) -> list[str]:
