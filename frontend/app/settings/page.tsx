@@ -39,8 +39,8 @@ export default function SettingsPage() {
     if (newPassword && confirmPassword) {
       if (newPassword !== confirmPassword) {
         setPasswordError("Passwords do not match.");
-      } else if (newPassword.length < 8) {
-        setPasswordError("Password must be at least 8 characters long.");
+      } else if (newPassword.length < 6) {
+        setPasswordError("Password must be at least 6 characters long.");
       } else {
         setPasswordError("");
       }
@@ -90,8 +90,8 @@ export default function SettingsPage() {
         return;
       }
 
-      if (newPassword.length < 8) {
-        setErrorMessage("Password must be at least 8 characters long.");
+      if (newPassword.length < 6) {
+        setErrorMessage("Password must be at least 6 characters long.");
         return;
       }
     }
