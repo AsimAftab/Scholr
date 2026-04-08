@@ -1,5 +1,4 @@
 import React from "react";
-import { HiOutlineXMark, HiOutlineCheck, HiOutlineXCircle } from "react-icons/hi2";
 
 export default function ComparisonSection() {
   return (
@@ -19,26 +18,40 @@ export default function ComparisonSection() {
           <div className="rounded-2xl border-2 border-red-200 bg-white p-8 shadow-sm">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <HiOutlineXMark className="h-6 w-6 text-red-600" strokeWidth={3} />
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+                </svg>
               </div>
               <h3 className="text-xl font-bold text-zinc-900">Before Scholr</h3>
             </div>
 
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <HiOutlineXCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6M15 9l-6 6" />
+                </svg>
                 <span className="text-zinc-700">20+ hours of manual research</span>
               </li>
               <li className="flex items-start gap-3">
-                <HiOutlineXCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6M15 9l-6 6" />
+                </svg>
                 <span className="text-zinc-700">Copy-pasting into Excel sheets</span>
               </li>
               <li className="flex items-start gap-3">
-                <HiOutlineXCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6M15 9l-6 6" />
+                </svg>
                 <span className="text-zinc-700">Guessing eligibility from vague text</span>
               </li>
               <li className="flex items-start gap-3">
-                <HiOutlineXCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6M15 9l-6 6" />
+                </svg>
                 <span className="text-zinc-700">Writing generic, unfocused SOPs</span>
               </li>
             </ul>
@@ -48,26 +61,36 @@ export default function ComparisonSection() {
           <div className="rounded-2xl border-2 border-green-200 bg-white p-8 shadow-lg">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                <HiOutlineCheck className="h-6 w-6 text-green-600" strokeWidth={3} />
+                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
               </div>
               <h3 className="text-xl font-bold text-zinc-900">After Scholr</h3>
             </div>
 
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <HiOutlineCheck className="h-5 w-5 shrink-0 text-green-500" />
+                <svg className="h-5 w-5 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
                 <span className="font-medium text-zinc-900">2 minutes to see your matches</span>
               </li>
               <li className="flex items-start gap-3">
-                <HiOutlineCheck className="h-5 w-5 shrink-0 text-green-500" />
+                <svg className="h-5 w-5 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
                 <span className="font-medium text-zinc-900">Scholarships ranked by fit score</span>
               </li>
               <li className="flex items-start gap-3">
-                <HiOutlineCheck className="h-5 w-5 shrink-0 text-green-500" />
+                <svg className="h-5 w-5 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
                 <span className="font-medium text-zinc-900">Clear eligibility requirements decoded</span>
               </li>
               <li className="flex items-start gap-3">
-                <HiOutlineCheck className="h-5 w-5 shrink-0 text-green-500" />
+                <svg className="h-5 w-5 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
                 <span className="font-medium text-zinc-900">AI-generated, scholarship-specific SOPs</span>
               </li>
             </ul>

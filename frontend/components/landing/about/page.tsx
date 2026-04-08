@@ -12,7 +12,7 @@ export default function AboutSection() {
               We started Scholr to solve the scholarship search problem.
             </h2>
             <p className="mt-8 text-lg text-zinc-500 leading-relaxed max-w-2xl">
-              Every year, millions of scholarships go unclaimed because students can't find them or don't know if they qualify. We use AI to eliminate the guesswork and help you discover opportunities you'd otherwise miss.
+              Every year, millions of scholarships go unclaimed because students can&apos;t find them or don&apos;t know if they qualify. We use AI to eliminate the guesswork and help you discover opportunities you&apos;d otherwise miss.
             </p>
           </div>
 
@@ -25,7 +25,7 @@ export default function AboutSection() {
               </p>
             </div>
             <div className="space-y-3">
-              <h3 className="text-[11px] font-bold text-zinc-950 uppercase tracking-[0.2em]">How we're different</h3>
+              <h3 className="text-[11px] font-bold text-zinc-950 uppercase tracking-[0.2em]">How we&apos;re different</h3>
               <p className="text-[15px] leading-relaxed text-zinc-500">
                 Unlike scholarship databases that just list opportunities, we analyze your profile and tell you exactly where you stand.
               </p>
@@ -39,7 +39,7 @@ export default function AboutSection() {
             <div className="lg:col-span-4">
               <h3 className="text-[11px] font-bold text-black-500 uppercase tracking-[0.2em]">Why trust us</h3>
               <p className="mt-4 text-sm text-zinc-500 leading-relaxed">
-                We're committed to data integrity and student privacy in everything we build.
+                We&apos;re committed to data integrity and student privacy in everything we build.
               </p>
             </div>
             <div className="lg:col-span-8">
@@ -81,7 +81,7 @@ export default function AboutSection() {
                     </svg>
                   </div>
                   <p className="text-[14px] leading-relaxed text-zinc-500">
-                    <span className="font-bold text-zinc-900">Unbiased rankings:</span> We don't accept payment to promote scholarships. No ads, just matches.
+                    <span className="font-bold text-zinc-900">Unbiased rankings:</span> We don&apos;t accept payment to promote scholarships. No ads, just matches.
                   </p>
                 </li>
               </ul>
