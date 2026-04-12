@@ -50,9 +50,7 @@ export default function AboutSection() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <p className="text-[14px] leading-relaxed text-zinc-500">
-                    <span className="font-bold text-zinc-900">AI-powered analysis:</span> Our engine reads 10,000+ scholarship pages daily to extract and verify requirements.
-                  </p>
+                    <span className="font-bold text-zinc-900">AI-driven analysis:</span> Our engines precisely match your profile against a growing web of global scholarship databases.
                 </li>
                 <li className="flex gap-4">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
@@ -60,9 +58,7 @@ export default function AboutSection() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <p className="text-[14px] leading-relaxed text-zinc-500">
-                    <span className="font-bold text-zinc-900">Fresh data guarantee:</span> Every scholarship verified within 24 hours of deadline changes.
-                  </p>
+                    <span className="font-bold text-zinc-900">Continuous verification:</span> We keep our data current to ensure requirements and deadlines are always accurate.
                 </li>
                 <li className="flex gap-4">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">

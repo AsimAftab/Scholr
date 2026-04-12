@@ -36,27 +36,27 @@ export default function FAQSection() {
   const faqs = [
     {
       question: "How accurate are the match scores?",
-      answer: "Our AI analyzes both explicit requirements (GPA, degree level) and implicit eligibility clues from scholarship descriptions. Current accuracy is 94% based on user feedback. We show you exactly why you matched or didn't match so you can make informed decisions."
+      answer: "We focus on high-fidelity matching based on your explicit transcript data and stated goals. While we've just launched, our internal testing shows high precision in identifying scholarships where you meet 100% of the mandatory criteria, ensuring you don't waste time on dead-end applications."
     },
     {
       question: "Do I still need to write my own essays?",
-      answer: "The AI-generated SOPs and LORs are tailored to your profile and the specific scholarship, but we recommend reviewing and personalizing them. Think of it as a strong first draft that captures the key points scholarship committees look for."
+      answer: "Scholr provides a sophisticated AI-driven drafting engine that creates high-quality first drafts of SOPs and Letters of Recommendation tailored to your unique profile. We strongly encourage you to review and inject your personal voice into these drafts to ensure they resonate authentically with selection committees."
     },
     {
       question: "How often is the scholarship database updated?",
-      answer: "We sync with official university and government sources daily. Deadlines, funding amounts, and new opportunities are updated in real-time. You'll see a 'last updated' timestamp on each scholarship."
+      answer: "We are currently in a high-growth phase and sync our database with major university and global scholarship foundations daily. Our team manually verifies high-value opportunities to ensure that requirements and deadlines are 100% accurate before they reach your dashboard."
     },
     {
-      question: "Is this free to use?",
-      answer: "Yes! Creating a profile, getting matched, and browsing scholarships is completely free. We're committed to making education accessible to every student."
+      question: "Is Scholr free to use?",
+      answer: "Yes. Our core mission is to make quality education accessible. All essential features—including profile building, scholarship matching, and AI drafting—are currently free for students as we continue to build and refine our platform."
     },
     {
-      question: "Which countries do you cover?",
-      answer: "We currently support scholarships in 50+ countries including USA, UK, Canada, Germany, Australia, Netherlands, Sweden, and many more. Our database is constantly expanding."
+      question: "Which countries do you currently cover?",
+      answer: "Our initial focus is on major international education hubs including the USA, UK, Canada, and Australia. We are rapidly expanding our crawler to include scholarships in Europe and Asia. If you have a specific destination in mind, our system will prioritize finding those matches for you."
     },
     {
       question: "What degree levels are supported?",
-      answer: "Undergraduate, Masters, PhD, and postdoctoral opportunities. We also have specialized filters for research grants and fellowships."
+      answer: "We currently support Undergraduate and Masters level scholarships. PhD and Postdoctoral opportunities are being integrated into our database and will be fully searchable in the coming weeks."
     }
   ];
 

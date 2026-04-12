@@ -3,8 +3,8 @@ import { HiOutlineMagnifyingGlass, HiOutlineSparkles, HiOutlineCpuChip } from "r
 const featureCards = [
   {
     eyebrow: "Smart Discovery",
-    title: "Access 50+ Scholarships in One Place",
-    copy: "Browse opportunities from USA, UK, Canada, Germany, and more-all updated and verified in real-time.",
+    title: "Access Global Scholarships in One Place",
+    copy: "Browse a curated and growing database of opportunities from the USA, UK, Canada, Australia, and more.",
     icon: "search",
     color: "blue"
   },
@@ -56,9 +56,9 @@ export default function FeaturesSection() {
                 <div className="relative flex h-14 w-14 items-center justify-center">
                   <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
                     <circle cx="18" cy="18" r="16" fill="none" className="stroke-zinc-100" strokeWidth="3" />
-                    <circle cx="18" cy="18" r="16" fill="none" className="stroke-green-500" strokeWidth="3" strokeDasharray="100" strokeDashoffset="12" strokeLinecap="round" />
+                    <circle cx="18" cy="18" r="16" fill="none" className="stroke-blue-500" strokeWidth="3" strokeDasharray="100" strokeDashoffset="20" strokeLinecap="round" />
                   </svg>
-                  <span className="absolute text-[10px] font-black text-zinc-900">95%</span>
+                  <span className="absolute text-[10px] font-black text-zinc-900">v1.2</span>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-zinc-950 uppercase tracking-tight">Match Accuracy</p>
