@@ -35,13 +35,36 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-10">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl font-black tracking-tighter text-zinc-950">SCHOLR.</span>
+          <span className="text-2xl font-black tracking-tighter text-zinc-950 uppercase">Scholr<span className="text-blue-600">.</span></span>
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-8 md:flex">
           {links.map((item) => {
+            const matches = item.href.match(/^#(.+)$/);
             const active = pathname === item.href || (isLanding && item.href.startsWith("/#"));
+            
+            if (matches && isLanding) {
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => {
+                    const el = document.getElementById(matches[1]);
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  className={`text-sm font-medium transition-colors ${
+                    active 
+                      ? "text-zinc-950" 
+                      : "text-zinc-500 hover:text-zinc-950"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
@@ -106,16 +129,36 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
       {isMobileMenuOpen && (
         <div className="border-t border-zinc-100 bg-white p-5 md:hidden">
           <nav className="flex flex-col gap-4">
-            {links.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-lg font-semibold text-zinc-900"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {links.map((item) => {
+              const matches = item.href.match(/^#(.+)$/);
+              if (matches && isLanding) {
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() => {
+                      const el = document.getElementById(matches[1]);
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth" });
+                      }
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-left text-lg font-semibold text-zinc-900"
+                  >
+                    {item.label}
+                  </button>
+                );
+              }
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-lg font-semibold text-zinc-900"
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             <div className="my-2 h-px bg-zinc-100" />
             {user ? (
               <button

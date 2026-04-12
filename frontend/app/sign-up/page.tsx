@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 import { AuthForm } from "@/components/auth-form";
-import { SiteShell } from "@/components/site-shell";
 import { useAuthContext } from "@/lib/auth-context";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { user, handleSignup, handleLogout } = useAuthContext();
+  const { user, handleSignup } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,20 +21,40 @@ export default function SignUpPage() {
   }, [router, user]);
 
   return (
-    <>
-      <SiteShell user={user} onLogout={handleLogout} />
-      <main className="min-h-[calc(100vh-81px)] px-5 py-10 md:px-10">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <aside className="rounded-2xl border border-slate-900/6 bg-zinc-950 p-8 text-white shadow-md">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">Get Started</p>
-            <h2 className="mt-4 text-4xl font-extrabold tracking-tight">Find scholarships you actually qualify for.</h2>
-            <div className="mt-8 space-y-4">
-              <Benefit text="Get instant match scores based on your unique academic profile and background." />
-              <Benefit text="Stop wasting time reading dense eligibility criteria. We extract the requirements for you." />
-              <Benefit text="Use AI to generate custom essays and statements of purpose tailored to each application." />
-            </div>
-          </aside>
+    <main className="flex min-h-screen">
+      {/* Left Panel: Visual/Branding */}
+      <div className="relative hidden lg:block lg:w-[60%]">
+        <Image
+          src="/auth-bg.png"
+          alt="Scholr Registration"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-zinc-950/20 backdrop-brightness-75" />
+        <div className="absolute inset-0 flex flex-col justify-between p-12 text-white">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-3xl font-black tracking-tighter">SCHOLR.</span>
+          </Link>
+          <div className="max-w-md">
+            <h2 className="text-4xl font-extrabold tracking-tight">
+              Start your journey today.
+            </h2>
+            <p className="mt-4 text-lg text-zinc-200">
+              Join thousands of students finding and securing scholarships with AI. Create your profile, track potential matches, and unlock success.
+            </p>
+          </div>
+        </div>
+      </div>
 
+      {/* Right Panel: Form */}
+      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:w-[40%] lg:px-20 xl:px-32 bg-zinc-100/30">
+        <div className="mx-auto w-full max-w-[480px]">
+          <div className="mb-8 lg:hidden">
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-2xl font-black tracking-tighter text-zinc-950">SCHOLR.</span>
+            </Link>
+          </div>
           <AuthForm
             mode="sign-up"
             loading={loading}
@@ -56,15 +77,7 @@ export default function SignUpPage() {
             }}
           />
         </div>
-      </main>
-    </>
-  );
-}
-
-function Benefit({ text }: { text: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-7 text-slate-200">
-      <p>{text}</p>
-    </div>
+      </div>
+    </main>
   );
 }

@@ -11,6 +11,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { getMatches, getScholarships } from "@/lib/api";
 import { getMissingRequiredProfileFields, isProfileReady } from "@/lib/profile";
 import { Match, Scholarship } from "@/lib/types";
+import { HiOutlineAcademicCap, HiOutlineSparkles, HiOutlineChevronRight } from "react-icons/hi2";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -81,42 +82,59 @@ export default function DashboardPage() {
 
               {error || authError ? <p className="text-sm font-medium text-red-700">{error || authError}</p> : null}
 
-          <section id="profile" className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-            <div className="flex flex-col items-center justify-center rounded-xl border border-slate-900/6 bg-white/88 p-5 text-center shadow-md backdrop-blur-xl">
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100">
-                <svg className="h-5 w-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+          <section id="profile" className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] flex-1">
+            {/* Academic Profile Card */}
+            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border border-zinc-200/50 bg-white/40 p-12 text-center shadow-2xl backdrop-blur-3xl transition-all hover:border-zinc-300">
+              <div className="mb-8 inline-flex h-20 w-20 items-center justify-center rounded-[28px] bg-zinc-950 text-white shadow-[0_20px_40px_rgba(0,0,0,0.2)]">
+                <HiOutlineAcademicCap className="h-10 w-10" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-900">Your Academic Profile</h3>
-              <p className="mb-5 mt-2 text-sm leading-6 text-zinc-600">
+              <h3 className="text-2xl font-bold text-zinc-950 tracking-tight">Strategy Profile</h3>
+              <p className="mb-10 mt-5 text-[13px] leading-relaxed text-zinc-500 font-medium px-6">
                 {profileCardCopy}
               </p>
-              <Link href="/profile" className="inline-flex rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800">
-                {profileReady ? "Edit Profile" : "Complete Profile"}
+              <Link 
+                href="/profile" 
+                className="group inline-flex items-center gap-2 rounded-2xl bg-zinc-950 px-10 py-4 text-[13px] font-black uppercase tracking-widest text-white transition-all hover:bg-zinc-800 hover:shadow-2xl active:scale-[0.98]"
+              >
+                {profileReady ? "Optimize Strategy" : "Initialize Parameters"}
+                <HiOutlineChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
 
-            <div className="rounded-xl border border-slate-900/6 bg-white/88 p-5 shadow-md backdrop-blur-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500/70">Top recommendations</p>
-              <div className="mt-4 space-y-3">
+            {/* Recommendations List */}
+            <div className="rounded-[2.5rem] border border-zinc-200/50 bg-white/40 p-12 shadow-2xl backdrop-blur-3xl">
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-3">
+                   <div className="h-2 w-2 rounded-sm bg-zinc-950"></div>
+                   <p className="text-[11px] font-black uppercase tracking-[0.4em] text-zinc-400">Institutional Fit Analysis</p>
+                </div>
+                <span className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.2em]">Priority Tier</span>
+              </div>
+              
+              <div className="space-y-5">
                 {matches.slice(0, 3).map((match) => (
-                  <div key={match.scholarship_id} className="rounded-2xl border border-slate-900/5 bg-[#fbfaf7] p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="font-semibold text-zinc-950">{match.title}</p>
-                        <p className="mt-1 text-xs text-slate-500">{match.country}</p>
+                  <div key={match.scholarship_id} className="group rounded-[2.5rem] border border-zinc-100 bg-white p-7 transition-all duration-500 hover:border-zinc-200 hover:shadow-xl">
+                    <div className="flex items-start justify-between gap-8">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-3">
+                           <HiOutlineSparkles className="h-3.5 w-3.5 text-blue-600" />
+                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.25em]">{match.country}</p>
+                        </div>
+                        <p className="font-bold text-zinc-950 text-xl leading-tight truncate">{match.title}</p>
                       </div>
-                      <div className="rounded-full bg-zinc-950 px-3 py-1.5 text-sm font-semibold text-white">
-                        {match.match_score}%
+                      <div className="flex flex-col items-end pt-1">
+                        <span className="text-[11px] font-black text-zinc-950 bg-zinc-50 border border-zinc-100 px-4 py-1.5 rounded-full shadow-sm">
+                           {match.match_score}% Alignment
+                        </span>
                       </div>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{match.summary}</p>
+                    <p className="mt-5 text-[13px] leading-relaxed text-zinc-500 font-medium line-clamp-2">{match.summary}</p>
                   </div>
                 ))}
                 {matches.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-slate-300 p-5 text-sm text-slate-500">
-                    Save your profile to generate ranked scholarship matches.
+                  <div className="rounded-[2.5rem] border border-zinc-200 border-dashed p-12 text-center bg-zinc-50/50">
+                    <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Institutional Discovery Pending</p>
+                    <p className="mt-3 text-[13px] text-zinc-500 font-medium">Submit strategy parameters to reveal ranked opportunities.</p>
                   </div>
                 ) : null}
               </div>
