@@ -36,7 +36,7 @@ export default function FAQSection() {
   const faqs = [
     {
       question: "How accurate are the match scores?",
-      answer: "We focus on high-fidelity matching based on your explicit transcript data and stated goals. While we've just launched, our internal testing shows high precision in identifying scholarships where you meet 100% of the mandatory criteria, ensuring you don't waste time on dead-end applications."
+      answer: "We focus on high-fidelity matching based on your explicit transcript data and stated goals. While we've just launched, our internal testing shows strong precision in identifying scholarships where you meet the mandatory criteria, ensuring you don't waste time on dead-end applications."
     },
     {
       question: "Do I still need to write my own essays?",
@@ -44,7 +44,7 @@ export default function FAQSection() {
     },
     {
       question: "How often is the scholarship database updated?",
-      answer: "We are currently in a high-growth phase and sync our database with major university and global scholarship foundations daily. Our team manually verifies high-value opportunities to ensure that requirements and deadlines are 100% accurate before they reach your dashboard."
+      answer: "We are currently in a high-growth phase and sync our database with major university and global scholarship foundations daily. Our team manually verifies high-value opportunities to ensure that requirements and deadlines are highly accurate before they reach your dashboard."
     },
     {
       question: "Is Scholr free to use?",
@@ -56,7 +56,7 @@ export default function FAQSection() {
     },
     {
       question: "What degree levels are supported?",
-      answer: "We currently support Undergraduate and Masters level scholarships. PhD and Postdoctoral opportunities are being integrated into our database and will be fully searchable in the coming weeks."
+      answer: "We currently support Undergraduate and Masters level scholarships. PhD and Postdoctoral opportunities are being integrated into our database and will be available soon."
     }
   ];
 

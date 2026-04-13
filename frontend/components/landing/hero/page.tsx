@@ -22,7 +22,7 @@ export default function HeroSection({ user }: HeroSectionProps) {
       <div className="absolute top-0 right-0 -z-10 h-full w-full opacity-[0.3] [background-image:radial-gradient(#e5e7eb_0.8px,transparent_0.8px)] [background-size:32px_32px]"></div>
       
       {/* Subtle colorful aura on the right to fill emptiness */}
-      <div className="absolute -top-[20%] -right-[10%] -z-10 h-[1000px] w-[1000px] rounded-full bg-gradient-to-br from-blue-50/50 via-zinc-50/30 to-transparent blur-[120px]"></div>
+      <div className="absolute -top-[20%] -right-[10%] -z-10 h-[700px] w-[700px] rounded-full bg-gradient-to-br from-zinc-100/50 via-zinc-50/30 to-transparent blur-[100px]"></div>
 
       <div className="mx-auto max-w-7xl">
         <div className="grid lg:grid-cols-12 lg:gap-24 lg:items-center">

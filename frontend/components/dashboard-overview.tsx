@@ -8,6 +8,7 @@ import {
   HiOutlineGlobeAlt,
   HiOutlineCalendarDays
 } from "react-icons/hi2";
+import type { HeroIcon } from 'react-icons/hi2';
 
 import { isProfileReady } from "@/lib/profile";
 import { Match, Scholarship, User } from "@/lib/types";
@@ -107,7 +108,7 @@ export function DashboardOverview({ user, scholarships, matches }: DashboardOver
   );
 }
 
-function StatCard({ value, label, icon: Icon, trend }: { value: string; label: string; icon: any; trend: string }) {
+function StatCard({ value, label, icon: Icon, trend }: { value: string; label: string; icon: HeroIcon; trend: string }) {
   return (
     <div className="group rounded-[2.5rem] border border-zinc-200/50 bg-white p-8 transition-all duration-500 hover:border-zinc-300 hover:shadow-2xl hover:-translate-y-1">
       <div className="flex items-start justify-between mb-8">
@@ -122,7 +123,7 @@ function StatCard({ value, label, icon: Icon, trend }: { value: string; label: s
   );
 }
 
-function PulseItem({ title, value, icon: Icon, color = "text-zinc-900" }: { title: string; value: string; icon: any; color?: string }) {
+function PulseItem({ title, value, icon: Icon, color = "text-zinc-900" }: { title: string; value: string; icon: HeroIcon; color?: string }) {
   return (
     <div className="flex items-center gap-5">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100/50 text-zinc-950 border border-white">

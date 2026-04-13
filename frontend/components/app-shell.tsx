@@ -85,9 +85,9 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
                       : "text-zinc-500 hover:bg-white/[0.03] hover:text-zinc-200"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`h-[18px] w-[18px] transition-colors ${active ? "text-zinc-100" : "text-zinc-600 group-hover:text-zinc-400"}`} />
-                    <span className="text-[13px] font-medium tracking-tight">{item.label}</span>
+                  <div className="flex items-center gap-3.5">
+                    <Icon className={`h-5 w-5 transition-colors ${active ? "text-zinc-100" : "text-zinc-600 group-hover:text-zinc-400"}`} />
+                    <span className="text-[15px] font-semibold tracking-tight">{item.label}</span>
                   </div>
                 </Link>
               );
@@ -95,41 +95,37 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
           </nav>
         </div>
 
-        <div>
-          {/* Bottom Profile Card */}
-          <div className="mt-8 rounded-2xl border border-white/[0.05] bg-white/[0.01] p-4 shadow-sm backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800/80 border border-white/5">
-                 <div className="flex h-full w-full items-center justify-center rounded-full text-[11px] font-bold text-zinc-300 uppercase">
-                    {user.full_name?.split(" ").map(n => n[0]).join("") || "U"}
-                 </div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-bold text-zinc-200 leading-tight">{user.full_name}</p>
-                <p className="truncate text-[9px] font-extrabold text-zinc-500 uppercase tracking-[0.1em] mt-1">
-                  Premium Student Plan
-                </p>
-              </div>
-            </div>
-            
-            <button
-              type="button"
-              onClick={handleLogoutClick}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-800/40 px-4 py-2 text-[11px] font-bold text-zinc-400 transition-all hover:bg-zinc-800 hover:text-white group border border-white/5"
-            >
-              <HiOutlineArrowLeftOnRectangle className="h-3.5 w-3.5 text-zinc-500 group-hover:text-white transition-colors" />
-              Logout
-            </button>
-          </div>
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={handleLogoutClick}
+            className="group flex w-full items-center gap-3.5 rounded-lg px-4 py-2.5 transition-all duration-200 text-zinc-500 hover:bg-white/[0.03] hover:text-red-400"
+          >
+            <HiOutlineArrowLeftOnRectangle className="h-5 w-5 text-zinc-600 transition-colors group-hover:text-red-500" />
+            <span className="text-[15px] font-semibold tracking-tight">Logout</span>
+          </button>
         </div>
       </aside>
 
       <div className={`min-w-0 ${lockViewport ? "lg:flex lg:h-screen lg:flex-col lg:overflow-hidden" : ""}`}>
         <header className={`border-b border-zinc-200/50 bg-white/80 backdrop-blur-3xl px-6 py-6 transition-all duration-300 md:px-12`}>
-          <div className="flex items-center justify-between">
-            <h1 className={`text-4xl font-bold tracking-tight text-zinc-950 leading-tight`}>{title}</h1>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+            <div className="flex-1">
+              <h1 className={`text-4xl font-bold tracking-tight text-zinc-950 leading-tight`}>{title}</h1>
+              <p className={`mt-3 max-w-2xl text-base leading-relaxed text-zinc-500 font-medium`}>{subtitle}</p>
+            </div>
+            
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="hidden lg:block text-right">
+                <p className="text-sm font-bold text-zinc-900 leading-tight">{user.full_name}</p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 border border-blue-100 shadow-sm">
+                 <div className="flex h-full w-full items-center justify-center rounded-full text-[12px] font-bold text-blue-700 uppercase">
+                    {user.full_name?.split(" ").map(n => n[0]).join("") || "U"}
+                 </div>
+              </div>
+            </div>
           </div>
-          <p className={`mt-3 max-w-2xl text-base leading-relaxed text-zinc-500 font-medium`}>{subtitle}</p>
         </header>
 
         <main className={`${compact ? "px-6 py-5 md:px-8" : "px-6 py-8 md:px-10"} ${lockViewport ? "flex-1 lg:overflow-hidden" : ""}`}>{children}</main>
