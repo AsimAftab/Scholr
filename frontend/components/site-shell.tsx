@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useState } from "react";
+import { useState } from "react";
 import { HiBars3, HiXMark } from "react-icons/hi2";
 
 import { User } from "@/lib/types";
@@ -30,35 +30,43 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
 
   const links = user ? appLinks : landingLinks;
   const isLanding = pathname === "/";
+  const scrollToSection = (href: string) => {
+    const hash = href.match(/^\/?#(.+)$/)?.[1] ?? href.match(/^\/#(.+)$/)?.[1];
+
+    if (!hash || !isLanding) {
+      return false;
+    }
+
+    const el = document.getElementById(hash);
+    if (!el) {
+      return false;
+    }
+
+    el.scrollIntoView({ behavior: "smooth" });
+    window.history.pushState(null, "", `/#${hash}`);
+    return true;
+  };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white">
+    <header className="sticky top-0 z-50 border-b border-slate-900/5 bg-white/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-10">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl font-black tracking-tighter text-zinc-950 uppercase">Scholr<span className="text-blue-600">.</span></span>
+          <span className="text-2xl font-black tracking-tighter text-zinc-950">SCHOLR.</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-2 rounded-full border border-slate-900/5 bg-white/70 p-1 shadow-sm md:flex">
           {links.map((item) => {
-            const matches = item.href.match(/^#(.+)$/);
-            const active = pathname === item.href || (isLanding && item.href.startsWith("/#"));
-            
-            if (matches && isLanding) {
+            const active = user && pathname === item.href;
+
+            if (isLanding && item.href.startsWith("/#")) {
               return (
                 <button
                   key={item.href}
                   onClick={() => {
-                    const el = document.getElementById(matches[1]);
-                    if (el) {
-                      el.scrollIntoView({ behavior: "smooth" });
-                    }
+                    scrollToSection(item.href);
                   }}
-                  className={`text-sm font-medium transition-colors ${
-                    active 
-                      ? "text-zinc-950" 
-                      : "text-zinc-500 hover:text-zinc-950"
-                  }`}
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-zinc-950"
                 >
                   {item.label}
                 </button>
@@ -69,10 +77,10 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium transition-colors ${
-                  active 
-                    ? "text-zinc-950" 
-                    : "text-zinc-500 hover:text-zinc-950"
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  active
+                    ? "bg-zinc-950 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-zinc-950"
                 }`}
               >
                 {item.label}
@@ -87,26 +95,26 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
             <>
               <div className="text-right">
                 <p className="text-sm font-semibold text-zinc-950">{user.full_name}</p>
-                <p className="text-xs text-zinc-500">{user.email}</p>
+                <p className="text-xs text-slate-500">{user.email}</p>
               </div>
               <button
                 type="button"
                 onClick={() => void onLogout?.()}
-                className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-50"
+                className="rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-white"
               >
                 Log out
               </button>
             </>
           ) : (
             <>
-              <Link href="/sign-in" className="text-sm font-medium text-zinc-500 hover:text-zinc-950 transition-colors">
+              <Link href="/sign-in" className="rounded-full px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white/70 hover:text-zinc-950">
                 Sign in
               </Link>
               <Link
                 href="/sign-up"
-                className="rounded-md bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800 shadow-sm"
+                className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700"
               >
-                {user ? "Dashboard" : "Get started"}
+                Start free
               </Link>
             </>
           )}
@@ -114,8 +122,10 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
 
         {/* Mobile Menu Button */}
         <button 
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-950 md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-zinc-950 shadow-sm md:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-expanded={isMobileMenuOpen}
+          aria-label="Toggle navigation menu"
         >
           {isMobileMenuOpen ? (
             <HiXMark className="h-6 w-6" />
@@ -127,22 +137,18 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="border-t border-zinc-100 bg-white p-5 md:hidden">
+        <div className="border-t border-slate-900/5 bg-white/95 p-5 shadow-sm backdrop-blur-xl md:hidden">
           <nav className="flex flex-col gap-4">
             {links.map((item) => {
-              const matches = item.href.match(/^#(.+)$/);
-              if (matches && isLanding) {
+              if (isLanding && item.href.startsWith("/#")) {
                 return (
                   <button
                     key={item.href}
                     onClick={() => {
-                      const el = document.getElementById(matches[1]);
-                      if (el) {
-                        el.scrollIntoView({ behavior: "smooth" });
-                      }
+                      scrollToSection(item.href);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="text-left text-lg font-semibold text-zinc-900"
+                    className="rounded-lg px-2 py-1 text-left text-lg font-semibold text-zinc-900 transition hover:bg-slate-100"
                   >
                     {item.label}
                   </button>
@@ -153,7 +159,7 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-lg font-semibold text-zinc-900"
+                  className="rounded-lg px-2 py-1 text-lg font-semibold text-zinc-900 transition hover:bg-slate-100"
                 >
                   {item.label}
                 </Link>
@@ -167,19 +173,19 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
                   void onLogout?.();
                   setIsMobileMenuOpen(false);
                 }}
-                className="text-left text-lg font-semibold text-red-600"
+                className="rounded-lg px-2 py-1 text-left text-lg font-semibold text-red-600 transition hover:bg-red-50"
               >
                 Log out
               </button>
             ) : (
               <>
-                <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-semibold text-zinc-900">
+                <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg px-2 py-1 text-lg font-semibold text-zinc-900 transition hover:bg-slate-100">
                   Sign in
                 </Link>
                 <Link
                   href="/sign-up"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="rounded-xl bg-zinc-900 px-4 py-3 text-center text-lg font-semibold text-white"
+                  className="rounded-full bg-zinc-950 px-4 py-3 text-center text-lg font-semibold text-white"
                 >
                   Start free
                 </Link>

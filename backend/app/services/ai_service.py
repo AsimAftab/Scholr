@@ -114,18 +114,24 @@ class AIService:
         rule_score: int,
         missing_requirements: list[str],
     ) -> ScholarshipFitAssessment:
+        from datetime import date, timedelta
+
         positives: list[str] = []
         risks = list(missing_requirements)
+        signals_matched = 0
         scholarship_fields = scholarship.field_of_study if isinstance(scholarship.field_of_study, list) else []
+        structured = scholarship.structured_eligibility or {}
 
-        # Safe country comparison with null checks
+        # Country alignment
         if (
             profile.target_country
             and scholarship.country
             and profile.target_country.lower() == scholarship.country.lower()
         ):
             positives.append("Target country aligns with the scholarship destination")
-        # Safe field of study comparison with null checks
+            signals_matched += 1
+
+        # Field of study alignment
         if (
             profile.field_of_study
             and scholarship_fields
@@ -137,12 +143,36 @@ class AIService:
         ):
             positives.append("Field of study aligns directly with the scholarship scope")
             rule_score = min(rule_score + 10, 100)
+            signals_matched += 1
+
+        # GPA strength
+        required_gpa = structured.get("gpa_required")
+        if required_gpa is not None and profile.gpa is not None and profile.gpa >= required_gpa + 0.5:
+            positives.append(f"GPA of {profile.gpa} exceeds the minimum requirement of {required_gpa}")
+            signals_matched += 1
+
+        # Funding
+        if scholarship.is_fully_funded:
+            positives.append("Fully funded scholarship covers tuition and living expenses")
+            signals_matched += 1
+
+        # Deadline
+        today = date.today()
+        if scholarship.deadline and today < scholarship.deadline <= today + timedelta(days=180):
+            positives.append("Application deadline is upcoming — still actionable")
+            signals_matched += 1
+
+        # Academic timeline
         if profile.passout_year is not None:
             positives.append(f"Academic timeline indicates recent background ({profile.passout_year})")
+            signals_matched += 1
+
+        # Scale confidence based on signal count (40-70 range)
+        confidence = min(40 + (signals_matched * 5), 70)
 
         return ScholarshipFitAssessment(
             fit_score=max(0, min(rule_score, 100)),
-            confidence=55,
+            confidence=confidence,
             positives=positives,
             risks=risks,
             missing_items=list(missing_requirements),

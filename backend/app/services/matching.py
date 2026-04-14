@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+from datetime import date, timedelta
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -93,42 +94,71 @@ class MatchingService:
         return matches
 
     def _calculate_score(self, profile, scholarship: Scholarship) -> tuple[int, list[str]]:
-        structured = scholarship.structured_eligibility
+        structured = scholarship.structured_eligibility or {}
         score = 0
         missing: list[str] = []
 
-        # Defensive null checks for profile fields
+        # 1. Country match (+25)
         target_country = (profile.target_country or "").lower()
         scholarship_country = (scholarship.country or "").lower()
         if scholarship_country and target_country == scholarship_country:
-            score += 30
+            score += 25
 
+        # 2. Degree match (+18)
         degree_levels = structured.get("degree_levels") or []
         degree_candidates = [scholarship.degree, *degree_levels]
         profile_degree = (profile.degree_level or "").lower()
         if profile_degree and any(candidate.lower() == profile_degree for candidate in degree_candidates if candidate):
-            score += 20
+            score += 18
         else:
             missing.append(f"Degree preference differs: {scholarship.degree}")
 
+        # 3. GPA met (+20)
         required_gpa = structured.get("gpa_required")
         if required_gpa is None or (profile.gpa is not None and profile.gpa >= required_gpa):
-            score += 25
+            score += 20
         else:
             missing.append(f"GPA requirement not met ({required_gpa})")
 
+        # 4. IELTS met (+12)
         required_ielts = structured.get("ielts_required")
         if required_ielts is None or (profile.ielts_score is not None and profile.ielts_score >= required_ielts):
-            score += 15
+            score += 12
         else:
             missing.append(f"IELTS requirement not met ({required_ielts})")
 
+        # 5. Nationality eligible (+8)
         countries_allowed = structured.get("countries_allowed", [])
         profile_country = (profile.country or "").lower()
         if not countries_allowed or (profile_country and profile_country in [country.lower() for country in countries_allowed if country]):
-            score += 10
+            score += 8
         else:
             missing.append("Applicant nationality may be ineligible")
+
+        # 6. Field of study match (+10)
+        profile_field = (profile.field_of_study or "").lower()
+        scholarship_fields = scholarship.field_of_study if isinstance(scholarship.field_of_study, list) else []
+        structured_fields = structured.get("fields_of_study") or []
+        all_fields = [f.lower() for f in scholarship_fields + structured_fields if isinstance(f, str) and f]
+        if profile_field and all_fields:
+            if any(profile_field in f or f in profile_field for f in all_fields):
+                score += 10
+            else:
+                missing.append("Field of study may not align")
+        elif not all_fields:
+            score += 10  # no restriction on field
+
+        # 7. Funding preference (+5)
+        if scholarship.is_fully_funded:
+            score += 5
+
+        # 8. Deadline proximity (+2)
+        today = date.today()
+        if scholarship.deadline:
+            if scholarship.deadline < today:
+                missing.append("Scholarship deadline has passed")
+            elif scholarship.deadline <= today + timedelta(days=180):
+                score += 2
 
         return min(score, 100), missing
 

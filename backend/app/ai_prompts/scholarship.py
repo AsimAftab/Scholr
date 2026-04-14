@@ -8,6 +8,7 @@ from app.schemas.profile import ProfileRead
 
 def _academic_profile_summary(profile: ProfileRead) -> dict[str, str | int | float | None]:
     return {
+        "country_of_origin": profile.country,
         "degree": profile.degree_level,
         "field_of_study": profile.field_of_study,
         "gpa": profile.gpa,
@@ -80,28 +81,42 @@ def build_fit_scoring_prompt(
     missing_requirements: list[str],
 ) -> tuple[str, str, float]:
     system_prompt = (
-        "You score scholarship fit for a student. "
-        "Follow the input facts closely and return strict JSON only."
+        "You are a scholarship admissions advisor scoring how well a student fits a specific scholarship. "
+        "Score based on: eligibility alignment, academic strength relative to requirements, field relevance, and competitiveness.\n\n"
+        "Scoring rubric:\n"
+        "- 0-30: Ineligible or major mismatches (wrong degree level, ineligible nationality)\n"
+        "- 30-50: Meets some criteria but significant gaps remain\n"
+        "- 50-65: Meets all hard requirements but average among typical applicants\n"
+        "- 65-80: Strong alignment with requirements and relevant academic background\n"
+        "- 80-90: Excellent fit — exceeds requirements in a relevant field\n"
+        "- 90-100: Exceptional alignment across all dimensions (reserve for rare cases)\n\n"
+        "Never override hard eligibility failures (ineligible nationality, wrong degree level). "
+        "Do not invent missing facts. Return strict JSON only."
     )
 
     user_prompt = (
-        "You are scoring scholarship fit for a student. "
-        "Use the applicant profile, scholarship facts, and current rule-based score as context. "
-        "Do not override hard eligibility failures, and do not invent missing facts. "
-        "Return strict JSON with keys fit_score, confidence, positives, risks, missing_items, personalized_reasoning. "
-        "fit_score must be 0-100 and reflect overall fit among realistically eligible applicants. "
-        "personalized_reasoning must be 2 concise sentences tailored to the user.\n\n"
-        f"Applicant profile:\n{json.dumps(_academic_profile_summary(profile))}\n\n"
-        f"Scholarship:\n"
-        f"title={scholarship.title}\n"
-        f"country={scholarship.country}\n"
-        f"degree={scholarship.degree}\n"
-        f"funding_type={scholarship.funding_type}\n"
-        f"field_of_study={json.dumps(scholarship.field_of_study)}\n"
-        f"structured_eligibility={json.dumps(scholarship.structured_eligibility)}\n"
-        f"eligibility_text={scholarship.eligibility_text}\n\n"
-        f"Current rule-based score: {rule_score}\n"
-        f"Current missing requirements: {json.dumps(missing_requirements)}"
+        "## Applicant Profile\n"
+        f"{json.dumps(_academic_profile_summary(profile), indent=2)}\n\n"
+        "## Scholarship Details\n"
+        f"Title: {scholarship.title}\n"
+        f"Country: {scholarship.country}\n"
+        f"Degree: {scholarship.degree}\n"
+        f"Funding type: {scholarship.funding_type or 'Not specified'}\n"
+        f"Fully funded: {scholarship.is_fully_funded or False}\n"
+        f"Fields of study: {json.dumps(scholarship.field_of_study)}\n"
+        f"Structured eligibility: {json.dumps(scholarship.structured_eligibility)}\n"
+        f"Raw eligibility text: {scholarship.eligibility_text}\n\n"
+        "## Rule Engine Context\n"
+        f"Rule-based score: {rule_score}/100\n"
+        f"Identified gaps: {json.dumps(missing_requirements)}\n\n"
+        "## Your Task\n"
+        "Return JSON with these keys:\n"
+        "- fit_score (0-100): realistic fit score using the rubric above\n"
+        "- confidence (0-100): your confidence in this assessment\n"
+        "- positives: 2-4 specific strengths this applicant has for THIS scholarship\n"
+        "- risks: 1-3 specific concerns or gaps\n"
+        "- missing_items: hard requirements the applicant does not meet (empty list if all met)\n"
+        "- personalized_reasoning: exactly 2 concise sentences explaining why this scholarship is or is not a good fit for this specific student"
     )
     return system_prompt, user_prompt, 0.2
 

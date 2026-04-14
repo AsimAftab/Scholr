@@ -73,7 +73,7 @@ export default function ProfilePage() {
         )}
 
         {successMsg && (
-          <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm font-medium text-zinc-900">
             {successMsg}
           </div>
         )}

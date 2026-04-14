@@ -120,6 +120,7 @@ const fieldOfStudyCategories = {
 const allFieldOfStudyOptions = Object.values(fieldOfStudyCategories).flat();
 
 export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProps) {
+  const [activeTab, setActiveTab] = useState<"goals" | "history" | "documents">("goals");
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<ProfileFormState>(initialValue);
   const [gpaInput, setGpaInput] = useState(initialValue.gpa?.toString() ?? "");
@@ -157,7 +158,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
   };
 
   const baseInputClass = "w-full rounded-xl border px-4 py-3 text-sm font-bold shadow-sm outline-none transition-all";
-  const editInputClass = "border-slate-200 bg-white text-zinc-900 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
+  const editInputClass = "border-slate-200 bg-white text-zinc-900 hover:border-slate-300 focus:border-zinc-950 focus:ring-4 focus:ring-zinc-950/10";
   const readInputClass = "border-slate-100 bg-slate-50 text-slate-600 cursor-not-allowed opacity-100";
   const inputClassName = `${baseInputClass} ${isEditing ? editInputClass : readInputClass}`;
   
@@ -215,7 +216,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="px-5 py-2.5 rounded-xl bg-blue-500 text-white text-sm font-semibold shadow-sm transition-all hover:bg-blue-600 active:scale-95"
+            className="px-5 py-2.5 rounded-xl bg-zinc-950 text-white text-sm font-semibold shadow-sm transition-all hover:bg-zinc-800 active:scale-95"
           >
             Edit Profile
           </button>
@@ -228,16 +229,189 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
         </div>
       ) : null}
 
+      {/* Tab Bar */}
+      {(() => {
+        const goalsFields = ["target_country", "degree_level", "field_of_study"];
+        const historyFields = ["passout_year", "gpa", "ielts_score"];
+        const docsFields = ["resume_url"];
+        const hasGoalsErrors = goalsFields.some((f) => errors[f]);
+        const hasHistoryErrors = historyFields.some((f) => errors[f]);
+        const hasDocsErrors = docsFields.some((f) => errors[f]);
+        return (
+          <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setActiveTab("goals")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "goals"
+                  ? "bg-white text-zinc-900 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-700"
+              }`}
+            >
+              Goals
+              {hasGoalsErrors && activeTab !== "goals" && (
+                <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("history")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "history"
+                  ? "bg-white text-zinc-900 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-700"
+              }`}
+            >
+              Academic History
+              {hasHistoryErrors && activeTab !== "history" && (
+                <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("documents")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "documents"
+                  ? "bg-white text-zinc-900 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-700"
+              }`}
+            >
+              Documents
+              {hasDocsErrors && activeTab !== "documents" && (
+                <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+              )}
+            </button>
+          </div>
+        );
+      })()}
+
+      {/* Goals & Aspirations Tab */}
+      {activeTab === "goals" && (
+      <div className="animate-in fade-in duration-300">
+      {/* Goals & Aspirations Card */}
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+        <div className="p-6 md:p-8 flex items-center gap-3 bg-zinc-50/50 border-b border-zinc-100">
+          <div className="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center shrink-0">
+             <HiOutlineGlobeAlt className="w-5 h-5 text-zinc-950" />
+          </div>
+          <h3 className="text-lg font-bold text-zinc-900 tracking-tight">Goals & Aspirations</h3>
+        </div>
+        <div className="p-6 md:p-8 grid gap-x-8 gap-y-6 md:grid-cols-2">
+
+          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
+            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Target Country</label>
+            <input
+              className={inputClassName}
+              type="text"
+              list="target-country-options"
+              disabled={!isEditing}
+              value={String(form.target_country ?? "")}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  target_country: event.target.value,
+                }))
+              }
+              placeholder="e.g. USA"
+              autoComplete="off"
+            />
+            <datalist id="target-country-options">
+              {COUNTRIES.map((country) => (
+                <option key={country} value={country} />
+              ))}
+            </datalist>
+            {errors.target_country ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.target_country}</span> : null}
+          </div>
+
+          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
+            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Next Study Level</label>
+            <div className="relative group">
+              <select
+                className={selectClassName}
+                disabled={!isEditing}
+                value={form.degree_level ?? ""}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, degree_level: event.target.value as DegreeLevel }))
+                }
+              >
+                <option value="">Select degree level</option>
+                <option value="Bachelors">Bachelors</option>
+                <option value="Masters">Masters</option>
+                <option value="PhD">PhD</option>
+              </select>
+              <HiOutlineChevronDown className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors ${isEditing ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300'}`} />
+            </div>
+            {errors.degree_level ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.degree_level}</span> : null}
+          </div>
+
+          <div className={`space-y-1.5 transition-colors md:col-span-2 ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
+            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Field of Study / Major</label>
+            <div className="relative group">
+              <select
+                className={selectClassName}
+                disabled={!isEditing}
+                value={selectedFieldOfStudy}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    field_of_study: event.target.value === "Other" ? "Other" : event.target.value,
+                  }))
+                }
+              >
+                <option value="">Select field of study</option>
+                {Object.entries(fieldOfStudyCategories).map(([category, options]) => (
+                  <optgroup key={category} label={category}>
+                    {options.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+                <option value="Other">Other</option>
+              </select>
+              <HiOutlineChevronDown className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors ${isEditing ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300'}`} />
+            </div>
+            {errors.field_of_study ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.field_of_study}</span> : null}
+          </div>
+
+          {selectedFieldOfStudy === "Other" ? (
+            <div className={`space-y-1.5 transition-colors md:col-span-2 ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
+              <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Specify Other Field</label>
+              <input
+                className={inputClassName}
+                type="text"
+                disabled={!isEditing}
+                value={otherFieldOfStudy}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setForm((current) => ({
+                    ...current,
+                    field_of_study: value || "Other",
+                  }));
+                }}
+                placeholder="Enter your custom field of study"
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+      </div>
+      )}
+
+      {/* Academic History Tab */}
+      {activeTab === "history" && (
+      <div className="animate-in fade-in duration-300">
       {/* Academic Details Card */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8 flex items-center gap-3 bg-zinc-50/50 border-b border-zinc-100">
-          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-             <HiOutlineAcademicCap className="w-5 h-5 text-blue-500" />
+          <div className="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center shrink-0">
+             <HiOutlineAcademicCap className="w-5 h-5 text-zinc-950" />
           </div>
           <h3 className="text-lg font-bold text-zinc-900 tracking-tight">Academic History</h3>
         </div>
         <div className="p-6 md:p-8 grid gap-x-8 gap-y-6 md:grid-cols-2">
-          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-blue-600' : ''}`}>
+          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
             <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Passout Year</label>
             <input
               className={inputClassName}
@@ -255,7 +429,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
             {errors.passout_year ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.passout_year}</span> : null}
           </div>
 
-          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-blue-600' : ''}`}>
+          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
             <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">GPA</label>
             <input
               className={inputClassName}
@@ -265,7 +439,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
               value={gpaInput}
               onChange={(event) => {
                 const nextValue = event.target.value;
-                if (nextValue !== "" && !/^\d*\.?\d*$/.test(nextValue)) return;
+                if (nextValue !== "" && !/^\d*\.?\d{0,2}$/.test(nextValue)) return;
                 setGpaInput(nextValue);
 
                 if (nextValue === "") {
@@ -288,7 +462,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                   setGpaInput(form.gpa?.toString() ?? "");
                   return;
                 }
-                const clampedValue = Math.min(10, Math.max(0, value));
+                const clampedValue = Math.round(Math.min(10, Math.max(0, value)) * 100) / 100;
                 setGpaInput(clampedValue.toString());
                 setForm((current) => ({ ...current, gpa: clampedValue }));
               }}
@@ -297,7 +471,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
             {errors.gpa ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.gpa}</span> : null}
           </div>
 
-          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-blue-600' : ''}`}>
+          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
             <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">IELTS Score</label>
             <div className="relative group">
               <select
@@ -336,126 +510,22 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           </div>
         </div>
       </div>
-
-      {/* Goals & Aspirations Card */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
-        <div className="p-6 md:p-8 flex items-center gap-3 bg-zinc-50/50 border-b border-zinc-100">
-          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center shrink-0">
-             <HiOutlineGlobeAlt className="w-5 h-5 text-indigo-500" />
-          </div>
-          <h3 className="text-lg font-bold text-zinc-900 tracking-tight">Goals & Aspirations</h3>
-        </div>
-        <div className="p-6 md:p-8 grid gap-x-8 gap-y-6 md:grid-cols-2">
-          
-          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-indigo-600' : ''}`}>
-            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Target Country</label>
-            <input
-              className={inputClassName}
-              type="text"
-              list="target-country-options"
-              disabled={!isEditing}
-              value={String(form.target_country ?? "")}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  target_country: event.target.value,
-                }))
-              }
-              placeholder="e.g. USA"
-              autoComplete="off"
-            />
-            <datalist id="target-country-options">
-              {COUNTRIES.map((country) => (
-                <option key={country} value={country} />
-              ))}
-            </datalist>
-            {errors.target_country ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.target_country}</span> : null}
-          </div>
-
-          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-indigo-600' : ''}`}>
-            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Next Study Level</label>
-            <div className="relative group">
-              <select
-                className={selectClassName}
-                disabled={!isEditing}
-                value={form.degree_level ?? ""}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, degree_level: event.target.value as DegreeLevel }))
-                }
-              >
-                <option value="">Select degree level</option>
-                <option value="Bachelors">Bachelors</option>
-                <option value="Masters">Masters</option>
-                <option value="PhD">PhD</option>
-              </select>
-              <HiOutlineChevronDown className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors ${isEditing ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300'}`} />
-            </div>
-            {errors.degree_level ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.degree_level}</span> : null}
-          </div>
-
-          <div className={`space-y-1.5 transition-colors md:col-span-2 ${isEditing ? 'focus-within:text-indigo-600' : ''}`}>
-            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Field of Study / Major</label>
-            <div className="relative group">
-              <select
-                className={selectClassName}
-                disabled={!isEditing}
-                value={selectedFieldOfStudy}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    field_of_study: event.target.value === "Other" ? "Other" : event.target.value,
-                  }))
-                }
-              >
-                <option value="">Select field of study</option>
-                {Object.entries(fieldOfStudyCategories).map(([category, options]) => (
-                  <optgroup key={category} label={category}>
-                    {options.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-                <option value="Other">Other</option>
-              </select>
-              <HiOutlineChevronDown className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors ${isEditing ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300'}`} />
-            </div>
-            {errors.field_of_study ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.field_of_study}</span> : null}
-          </div>
-
-          {selectedFieldOfStudy === "Other" ? (
-            <div className={`space-y-1.5 transition-colors md:col-span-2 ${isEditing ? 'focus-within:text-indigo-600' : ''}`}>
-              <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Specify Other Field</label>
-              <input
-                className={inputClassName}
-                type="text"
-                disabled={!isEditing}
-                value={otherFieldOfStudy}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setForm((current) => ({
-                    ...current,
-                    field_of_study: value || "Other",
-                  }));
-                }}
-                placeholder="Enter your custom field of study"
-              />
-            </div>
-          ) : null}
-        </div>
       </div>
+      )}
 
+      {/* Documents Tab */}
+      {activeTab === "documents" && (
+      <div className="animate-in fade-in duration-300">
       {/* Documents Card */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8 flex items-center gap-3 bg-zinc-50/50 border-b border-zinc-100">
-          <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
-             <HiOutlineDocumentCheck className="w-5 h-5 text-emerald-500" />
+          <div className="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center shrink-0">
+             <HiOutlineDocumentCheck className="w-5 h-5 text-zinc-950" />
           </div>
           <h3 className="text-lg font-bold text-zinc-900 tracking-tight">Supporting Documents</h3>
         </div>
         <div className="p-6 md:p-8">
-          <div className={`space-y-1.5 transition-colors max-w-2xl ${isEditing ? 'focus-within:text-emerald-600' : ''}`}>
+          <div className={`space-y-1.5 transition-colors max-w-2xl ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
             <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors">Resume / CV URL</label>
             <input
               className={inputClassName}
@@ -475,6 +545,8 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           </div>
         </div>
       </div>
+      </div>
+      )}
 
       {isEditing && (
         <div className="flex justify-end pt-2 gap-4">
@@ -489,7 +561,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-3.5 rounded-xl bg-blue-500 text-white text-sm font-black shadow-sm transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-60 flex items-center justify-center min-w-[160px]"
+            className="px-6 py-3.5 rounded-xl bg-zinc-950 text-white text-sm font-black shadow-sm transition-all hover:bg-zinc-800 active:scale-95 disabled:opacity-60 flex items-center justify-center min-w-[160px]"
           >
             {loading ? "Saving Profile..." : "Save Changes"}
           </button>

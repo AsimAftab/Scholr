@@ -38,6 +38,7 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
           { href: "/dashboard", label: "Dashboard", meta: "Overview", icon: HiOutlineHome },
           { href: "/scholarships", label: "Catalog", meta: "All Scholarships", icon: HiOutlineBriefcase },
           { href: "/sources", label: "Sources", meta: "Crawlers", icon: HiOutlineAcademicCap },
+          { href: "/admin", label: "Operations", meta: "Ingestion", icon: HiOutlineBriefcase },
           { href: "/settings", label: "Settings", meta: "Account", icon: HiOutlineCog6Tooth },
         ]
       : [
@@ -85,25 +86,46 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
                       : "text-zinc-500 hover:bg-white/[0.03] hover:text-zinc-200"
                   }`}
                 >
-                  <div className="flex items-center gap-3.5">
-                    <Icon className={`h-5 w-5 transition-colors ${active ? "text-zinc-100" : "text-zinc-600 group-hover:text-zinc-400"}`} />
-                    <span className="text-[15px] font-semibold tracking-tight">{item.label}</span>
+                  <div className="flex items-center gap-3">
+                    <Icon className={`h-[18px] w-[18px] transition-colors ${active ? "text-zinc-100" : "text-zinc-600 group-hover:text-zinc-400"}`} />
+                    <span className="text-[13px] font-medium tracking-tight">{item.label}</span>
                   </div>
+                  <span className={`text-[10px] font-bold uppercase tracking-[0.08em] transition-colors ${
+                    active ? "text-zinc-400" : "text-zinc-700 group-hover:text-zinc-500"
+                  }`}>
+                    {item.meta}
+                  </span>
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        <div className="mt-8">
-          <button
-            type="button"
-            onClick={handleLogoutClick}
-            className="group flex w-full items-center gap-3.5 rounded-lg px-4 py-2.5 transition-all duration-200 text-zinc-500 hover:bg-white/[0.03] hover:text-red-400"
-          >
-            <HiOutlineArrowLeftOnRectangle className="h-5 w-5 text-zinc-600 transition-colors group-hover:text-red-500" />
-            <span className="text-[15px] font-semibold tracking-tight">Logout</span>
-          </button>
+        <div>
+          <div className="mt-8 rounded-2xl border border-white/[0.05] bg-white/[0.01] p-4 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/5 bg-zinc-800/80">
+                <div className="flex h-full w-full items-center justify-center rounded-full text-[11px] font-bold uppercase text-zinc-300">
+                  {user.full_name?.split(" ").map((n) => n[0]).join("") || "U"}
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-bold leading-tight text-zinc-200">{user.full_name}</p>
+                <p className="mt-1 truncate text-[9px] font-extrabold uppercase tracking-[0.1em] text-zinc-500">
+                  {user.role === "admin" ? "Admin Workspace" : "Premium Student Plan"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogoutClick}
+              className="group mt-5 flex w-full items-center justify-center gap-2 rounded-lg border border-white/5 bg-zinc-800/40 px-4 py-2 text-[11px] font-bold text-zinc-400 transition-all hover:bg-zinc-800 hover:text-white"
+            >
+              <HiOutlineArrowLeftOnRectangle className="h-3.5 w-3.5 text-zinc-500 transition-colors group-hover:text-white" />
+              Logout
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -119,8 +141,8 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
               <div className="hidden lg:block text-right">
                 <p className="text-sm font-bold text-zinc-900 leading-tight">{user.full_name}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 border border-blue-100 shadow-sm">
-                 <div className="flex h-full w-full items-center justify-center rounded-full text-[12px] font-bold text-blue-700 uppercase">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-zinc-100 shadow-sm">
+                 <div className="flex h-full w-full items-center justify-center rounded-full text-[12px] font-bold text-zinc-950 uppercase">
                     {user.full_name?.split(" ").map(n => n[0]).join("") || "U"}
                  </div>
               </div>
