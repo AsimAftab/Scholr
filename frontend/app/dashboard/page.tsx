@@ -73,7 +73,11 @@ export default function DashboardPage() {
       compact
       lockViewport
     >
-      <div className="flex h-full flex-col gap-4 lg:gap-5">
+      <div
+        className={`flex h-full min-h-0 flex-col gap-4 lg:gap-5 ${
+          user?.role === "admin" ? "overflow-y-auto pr-1" : ""
+        }`}
+      >
           {user?.role === "admin" ? (
             <AdminDashboard />
           ) : (
