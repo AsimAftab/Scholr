@@ -38,6 +38,10 @@ class AuthService:
             user.full_name = payload.full_name.strip()
 
         if payload.new_password is not None:
+            if payload.current_password is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is required to change password")
+            if not verify_password(payload.current_password, user.hashed_password):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid current password")
             user.hashed_password = hash_password(payload.new_password)
 
         self.db.add(user)

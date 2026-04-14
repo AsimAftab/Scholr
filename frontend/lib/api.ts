@@ -129,6 +129,7 @@ export async function me(): Promise<User | null> {
 
 export async function updateAccountSettings(payload: {
   full_name?: string;
+  current_password?: string;
   new_password?: string;
 }): Promise<User> {
   return request<User>("/auth/me", {

@@ -7,13 +7,17 @@ const countrySet = new Set(COUNTRIES);
 // Dynamic validation bounds
 const MAX_PASSOUT_YEAR = new Date().getFullYear() + 10;
 
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters.")
+  .max(128, "Password must be 128 characters or fewer.")
+  .regex(/[0-9]/, "Password must contain at least one number.")
+  .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character.");
+
 export const signupSchema = z.object({
   email: z.string().trim().email("Enter a valid email address."),
   full_name: z.string().trim().min(2, "Full name must be at least 2 characters."),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters.")
-    .max(128, "Password must be 128 characters or fewer."),
+  password: passwordSchema,
 });
 
 export const loginSchema = z.object({
@@ -24,12 +28,42 @@ export const loginSchema = z.object({
     .max(128, "Password must be 128 characters or fewer."),
 });
 
-export const profileSchema = z.object({
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .superRefine(({ newPassword, confirmPassword }, ctx) => {
+    if (newPassword !== confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match.",
+        path: ["confirmPassword"],
+      });
+    }
+  });
+
+export const editProfileSchema = z.object({
+  fullName: z.string().trim().min(2, "Full name must be at least 2 characters."),
+  gender: z.string().trim(),
+  dateOfBirth: z
+    .string()
+    .trim()
+    .refine((value) => !value || !Number.isNaN(Date.parse(value)), "Invalid date."),
   country: z
     .string()
     .trim()
     .min(2, "Country is required.")
     .refine((value) => countrySet.has(value as (typeof COUNTRIES)[number]), "Select a valid country from the list."),
+  gpa: z.number().min(0, "GPA must be at least 0.").max(10, "GPA must be 10.0 or below."),
+});
+
+export const profileSchema = z.object({
+  country: z
+    .string()
+    .trim()
+    .optional(),
   target_country: z
     .string()
     .trim()

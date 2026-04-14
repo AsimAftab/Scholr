@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { ZodError } from "zod";
 import { HiOutlineCheck, HiOutlineXMark } from "react-icons/hi2";
 import { updateAccountSettings } from "@/lib/api";
+import { changePasswordSchema, zodErrors } from "@/lib/validation";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -8,26 +10,56 @@ interface ChangePasswordModalProps {
 }
 
 export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProps) {
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setSaving(false);
+      setError("");
+      setSuccess(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+  }, []);
 
   if (!isOpen) return null;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword.length < 8) return setError("Password must be 8+ characters.");
-    if (newPassword !== confirmPassword) return setError("Passwords do not match.");
+
+    try {
+      changePasswordSchema.parse({ currentPassword, newPassword, confirmPassword });
+      setError("");
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const fieldErrors = zodErrors(err);
+        setError(fieldErrors.currentPassword ?? fieldErrors.newPassword ?? fieldErrors.confirmPassword ?? "Invalid password.");
+        return;
+      }
+
+      throw err;
+    }
 
     setSaving(true);
     try {
-      await updateAccountSettings({ new_password: newPassword });
+      await updateAccountSettings({ current_password: currentPassword, new_password: newPassword });
       setSuccess(true);
-      setTimeout(onClose, 1500);
-    } catch (err: any) {
-      setError(err.message);
+      closeTimeoutRef.current = setTimeout(onClose, 1500);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to update password.");
     } finally {
       setSaving(false);
     }
@@ -47,32 +79,48 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
           {success && <div className="p-3 text-xs font-bold bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">Synchronized.</div>}
           
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-widest">New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold focus:border-[#202224] focus:ring-4 focus:ring-slate-100 outline-none transition-all"
-              placeholder="••••••••"
-              autoFocus
-            />
+            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em]">Current Password</label>
+            <div className="relative group">
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-zinc-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-slate-300 outline-none transition-all shadow-sm"
+                placeholder="••••••••"
+                autoFocus
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-widest">Confirm Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold focus:border-[#202224] focus:ring-4 focus:ring-slate-100 outline-none transition-all"
-              placeholder="••••••••"
-            />
+            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em]">New Password</label>
+            <div className="relative group">
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-zinc-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-slate-300 outline-none transition-all shadow-sm"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em]">Confirm Password</label>
+            <div className="relative group">
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-zinc-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-slate-300 outline-none transition-all shadow-sm"
+                placeholder="••••••••"
+              />
+            </div>
           </div>
           <button
             type="submit"
             disabled={saving || success}
-            className="w-full py-4 rounded-xl bg-[#202224] text-white text-sm font-black hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
+            className="w-full py-4 rounded-xl bg-blue-600 text-white text-sm font-black hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
           >
-            {saving ? <div className="h-4 w-4 rounded-full border-2 border-slate-500 border-t-white animate-spin" /> : <HiOutlineCheck className="w-4 h-4" />}
+            {saving ? <div className="h-4 w-4 rounded-full border-2 border-blue-400 border-t-white animate-spin" /> : <HiOutlineCheck className="w-4 h-4" />}
             {saving ? "Updating..." : "Update Password"}
           </button>
         </form>
