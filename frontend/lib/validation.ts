@@ -59,6 +59,29 @@ export const editProfileSchema = z.object({
   gpa: z.number().min(0, "GPA must be at least 0.").max(10, "GPA must be 10.0 or below."),
 });
 
+export const educationSchema = z.object({
+  institution_name: z.string().trim().min(1, "Institution name is required.").max(255),
+  degree: z.string().trim().min(1, "Degree is required.").max(120),
+  field_of_study: z.string().trim().max(120).optional().or(z.literal("")),
+  start_year: z.number().int().min(1900).max(2100).optional(),
+  end_year: z.number().int().min(1900).max(2100).optional(),
+  gpa: z.number().min(0).max(10).optional(),
+  country: z.string().trim().max(120).optional().or(z.literal("")),
+  city: z.string().trim().max(120).optional().or(z.literal("")),
+  achievements: z.string().optional().or(z.literal("")),
+});
+
+export const workExperienceSchema = z.object({
+  company_name: z.string().trim().min(1, "Company name is required.").max(255),
+  job_title: z.string().trim().min(1, "Job title is required.").max(255),
+  start_date: z.string().trim().max(50).optional().or(z.literal("")),
+  end_date: z.string().trim().max(50).optional().or(z.literal("")),
+  is_current: z.boolean().optional(),
+  employment_type: z.enum(["Full-time", "Part-time", "Internship", "Contract"]).optional().or(z.literal("").transform(() => undefined)),
+  location: z.string().trim().max(255).optional().or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
+});
+
 export const profileSchema = z.object({
   country: z
     .string()
@@ -91,6 +114,8 @@ export const profileSchema = z.object({
     .refine((val) => !val || !isNaN(Date.parse(val)), "Invalid date.")
     .optional(),
   resume_url: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
+  educations: z.array(educationSchema).optional(),
+  work_experiences: z.array(workExperienceSchema).optional(),
 });
 
 export type FieldErrors = Record<string, string>;

@@ -5,12 +5,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Install dependencies first (cached unless requirements.txt changes)
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Copy migration config and scripts (changes less often than app code)
 COPY alembic.ini ./alembic.ini
 COPY alembic ./alembic
+
+# Copy application code last (changes most often)
 COPY app ./app
 COPY .env.example ./.env.example
 

@@ -56,7 +56,7 @@ class AuthService:
             httponly=True,
             samesite="lax",
             secure=settings.session_cookie_secure,
-            max_age=60 * 60 * 24 * 7,
+            max_age=settings.session_max_age_seconds,
         )
 
     @staticmethod

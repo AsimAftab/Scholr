@@ -8,6 +8,7 @@ import { ProfileForm } from "@/components/profile-form";
 import { useAuthContext } from "@/lib/auth-context";
 import { createProfile } from "@/lib/api";
 import { Profile } from "@/lib/types";
+import { useToast } from "@/components/toast";
 
 const defaultProfile: Profile = {
   country: "",
@@ -25,7 +26,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
+  const { showToast } = useToast();
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -72,26 +73,19 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {successMsg && (
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm font-medium text-zinc-900">
-            {successMsg}
-          </div>
-        )}
-
         <ProfileForm
           initialValue={profile}
           loading={saving}
           onSubmit={async (nextProfile) => {
             setSaving(true);
             setError("");
-            setSuccessMsg("");
             try {
               // Merge with existing profile to preserve fields not in current form state
               const mergedProfile = { ...profile, ...nextProfile };
               const saved = await createProfile(mergedProfile);
               setProfile(saved);
               setUser({ ...user, profile: saved });
-              setSuccessMsg("Profile saved successfully. Your matches have been updated.");
+              showToast("Profile saved successfully.");
               if (isMounted.current) {
                 router.push("/dashboard");
               }

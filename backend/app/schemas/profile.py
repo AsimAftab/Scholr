@@ -4,6 +4,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
 from app.schemas.country_options import COUNTRIES
+from app.schemas.education import EducationCreate, EducationRead
+from app.schemas.work_experience import WorkExperienceCreate, WorkExperienceRead
 
 
 class ProfileBase(BaseModel):
@@ -38,10 +40,13 @@ class ProfileBase(BaseModel):
 
 
 class ProfileCreate(ProfileBase):
-    pass
+    educations: list[EducationCreate] = Field(default_factory=list)
+    work_experiences: list[WorkExperienceCreate] = Field(default_factory=list)
 
 
 class ProfileRead(ProfileBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int | None = None
+    educations: list[EducationRead] = Field(default_factory=list)
+    work_experiences: list[WorkExperienceRead] = Field(default_factory=list)

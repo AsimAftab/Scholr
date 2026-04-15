@@ -3,6 +3,31 @@ export type UserRole = "admin" | "user";
 export type AIProvider = "openai" | "cerebras" | "glm" | "ollama" | "local";
 export type RemoteAIProvider = Exclude<AIProvider, "local">;
 
+export type Education = {
+  id?: number;
+  institution_name: string;
+  degree: string;
+  field_of_study?: string;
+  start_year?: number;
+  end_year?: number;
+  gpa?: number;
+  country?: string;
+  city?: string;
+  achievements?: string;
+};
+
+export type WorkExperience = {
+  id?: number;
+  company_name: string;
+  job_title: string;
+  start_date?: string;
+  end_date?: string;
+  is_current?: boolean;
+  employment_type?: "Full-time" | "Part-time" | "Internship" | "Contract";
+  location?: string;
+  description?: string;
+};
+
 export type Profile = {
   id?: number;
   country: string;
@@ -15,6 +40,8 @@ export type Profile = {
   gender?: string;
   date_of_birth?: string;
   resume_url?: string;
+  educations?: Education[];
+  work_experiences?: WorkExperience[];
 };
 
 export type Scholarship = {

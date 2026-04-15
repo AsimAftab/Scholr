@@ -148,11 +148,34 @@ class MatchingService:
         elif not all_fields:
             score += 10  # no restriction on field
 
-        # 7. Funding preference (+5)
+        # 7. Education field alignment (+5)
+        education_fields = [
+            (edu.field_of_study or "").lower()
+            for edu in (profile.educations or [])
+            if edu.field_of_study
+        ]
+        if education_fields and all_fields:
+            if any(
+                ef in sf or sf in ef
+                for ef in education_fields
+                for sf in all_fields
+            ):
+                score += 5
+
+        # 8. Prior study in scholarship country (+3)
+        education_countries = [
+            (edu.country or "").lower()
+            for edu in (profile.educations or [])
+            if edu.country
+        ]
+        if scholarship_country and scholarship_country in education_countries:
+            score += 3
+
+        # 9. Funding preference (+5)
         if scholarship.is_fully_funded:
             score += 5
 
-        # 8. Deadline proximity (+2)
+        # 10. Deadline proximity (+2)
         today = date.today()
         if scholarship.deadline:
             if scholarship.deadline < today:
@@ -163,9 +186,21 @@ class MatchingService:
         return min(score, 100), missing
 
     def _profile_fingerprint(self, profile: ProfileRead) -> str:
+        profile_data = profile.model_dump(mode="json")
+        # Sort list fields for deterministic hashing regardless of entry order
+        if "educations" in profile_data:
+            profile_data["educations"] = sorted(
+                profile_data["educations"],
+                key=lambda e: (e.get("institution_name", ""), e.get("start_year") or 0),
+            )
+        if "work_experiences" in profile_data:
+            profile_data["work_experiences"] = sorted(
+                profile_data["work_experiences"],
+                key=lambda w: w.get("start_date") or "",
+            )
         payload = json.dumps(
             {
-                "profile": profile.model_dump(mode="json"),
+                "profile": profile_data,
                 "strategy": {
                     "ai_provider": self.ai.runtime_settings.ai_provider,
                     "ai_fallback_order": self.ai.runtime_settings.ai_fallback_order,

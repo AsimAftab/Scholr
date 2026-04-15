@@ -167,6 +167,22 @@ class AIService:
             positives.append(f"Academic timeline indicates recent background ({profile.passout_year})")
             signals_matched += 1
 
+        # Work experience
+        work_experiences = profile.work_experiences or []
+        if work_experiences:
+            current_roles = [exp.job_title for exp in work_experiences if exp.is_current]
+            if current_roles:
+                positives.append(f"Currently employed as {current_roles[0]} — demonstrates active professional engagement")
+            else:
+                positives.append(f"Professional experience across {len(work_experiences)} role(s) demonstrates practical knowledge")
+            signals_matched += 1
+
+        # Education depth
+        educations = profile.educations or []
+        if len(educations) > 1:
+            positives.append(f"Multiple qualifications across {len(educations)} institution(s) show continuous learning")
+            signals_matched += 1
+
         # Scale confidence based on signal count (40-70 range)
         confidence = min(40 + (signals_matched * 5), 70)
 

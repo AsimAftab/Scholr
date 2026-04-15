@@ -1,0 +1,14 @@
+FROM oven/bun:alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+
+# Copy all source files as baseline (volume mounts override at runtime)
+COPY . .
+
+EXPOSE 3000
+
+CMD ["bun", "run", "dev"]

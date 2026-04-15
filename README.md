@@ -47,7 +47,7 @@ docker compose up -d
 
 ## One-Command Docker Startup
 
-If you want the full MVP stack from the repo root, use:
+Start all services with hot reload (development):
 
 ```bash
 docker compose up --build
@@ -56,12 +56,18 @@ docker compose up --build
 This starts:
 
 - PostgreSQL on `localhost:5432`
-- FastAPI on `http://localhost:8000`
-- Next.js on `http://localhost:3000`
+- FastAPI on `http://localhost:8000` (auto-reloads on Python changes)
+- Next.js on `http://localhost:3000` (HMR on frontend changes)
 
 The backend container runs `alembic upgrade head` before serving traffic.
 
-To run it detached:
+Production build (no hot reload, optimized images):
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+To run detached:
 
 ```bash
 docker compose up -d --build

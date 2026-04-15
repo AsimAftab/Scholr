@@ -20,7 +20,6 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
     container_name: scholr-backend
     restart: unless-stopped
     extra_hosts:
@@ -31,9 +30,9 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      APP_ENV: development
-      DEBUG: "true"
-      LOG_LEVEL: INFO
+      APP_ENV: production
+      DEBUG: "false"
+      LOG_LEVEL: WARNING
       DATABASE_URL: postgresql+psycopg://scholr:scholr@postgres:5432/scholr
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
@@ -41,13 +40,9 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-change-me-dev-secret}
       SESSION_COOKIE_NAME: scholr_session
       SESSION_COOKIE_SECURE: "false"
-      AUTO_SEED: "true"
+      AUTO_SEED: "false"
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend/app:/app/app
-      - ./backend/alembic:/app/alembic
-      - ./backend/alembic.ini:/app/alembic.ini
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready')"]
       interval: 10s
@@ -57,7 +52,6 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
     container_name: scholr-frontend
     restart: unless-stopped
     depends_on:
@@ -65,19 +59,8 @@ services:
         condition: service_healthy
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
-      WATCHPACK_POLLING: "true"
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend/app:/app/app
-      - ./frontend/components:/app/components
-      - ./frontend/lib:/app/lib
-      - ./frontend/providers:/app/providers
-      - ./frontend/public:/app/public
-      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
-      - ./frontend/postcss.config.mjs:/app/postcss.config.mjs
-      - ./frontend/next.config.mjs:/app/next.config.mjs
-      - ./frontend/tsconfig.json:/app/tsconfig.json
 
 volumes:
   postgres_data:

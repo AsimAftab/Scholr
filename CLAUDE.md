@@ -28,9 +28,14 @@ Scholr is an AI-powered scholarship discovery and matching platform with three m
 
 ### Docker (Recommended)
 
-Start all services (PostgreSQL, Backend, Frontend):
+Start all services with hot reload (default, dev mode):
 ```bash
 docker compose up --build
+```
+
+Production build (no hot reload, optimized images):
+```bash
+docker compose -f docker-compose.prod.yml up --build
 ```
 
 Start detached:

@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     session_secret: str = Field(alias="SESSION_SECRET")
     session_cookie_name: str = Field(default="scholr_session", alias="SESSION_COOKIE_NAME")
     session_cookie_secure: bool = Field(default=False, alias="SESSION_COOKIE_SECURE")
+    session_max_age_seconds: int = Field(default=60 * 60 * 24 * 7, alias="SESSION_MAX_AGE_SECONDS")
     auto_seed: bool = Field(default=False, alias="AUTO_SEED")
     admin_email: str | None = Field(default=None, alias="ADMIN_EMAIL")
     admin_password: str | None = Field(default=None, alias="ADMIN_PASSWORD")
@@ -146,6 +147,7 @@ class Settings(BaseSettings):
         "tinyfish_timeout_seconds",
         "tinyfish_poll_interval_seconds",
         "tinyfish_batch_size",
+        "session_max_age_seconds",
     )
     @classmethod
     def validate_positive_integers(cls, value: int, info) -> int:
