@@ -212,7 +212,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
   };
 
   // Tab config
-  const goalsFields = ["target_country", "degree_level", "field_of_study"];
+  const goalsFields = ["country", "target_country", "degree_level", "field_of_study"];
   const historyFields = ["passout_year", "gpa", "ielts_score"];
   const docsFields = ["resume_url"];
 
@@ -230,7 +230,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
 
           formToValidate.gender = initialValue.gender;
           formToValidate.date_of_birth = initialValue.date_of_birth;
-          formToValidate.country = initialValue.country || "";
+          formToValidate.country = form.country ?? "";
 
           const normalizedResumeUrl = (formToValidate.resume_url ?? "").trim();
           formToValidate.resume_url = normalizedResumeUrl === "" ? undefined : normalizedResumeUrl;
@@ -617,6 +617,30 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           <h3 className="text-lg font-bold text-zinc-900 tracking-tight">Goals & Aspirations</h3>
         </div>
         <div className="p-6 md:p-8 grid gap-x-8 gap-y-6 md:grid-cols-2">
+
+          <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
+            <label className={labelClass}>Home Country</label>
+            <div className="relative group">
+              <select
+                className={selectClassName}
+                disabled={!isEditing}
+                value={form.country ?? ""}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    country: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Select country</option>
+                {COUNTRIES.map((country) => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
+              <HiOutlineChevronDown className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors ${isEditing ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300'}`} />
+            </div>
+            {errors.country ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.country}</span> : null}
+          </div>
 
           <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
             <label className={labelClass}>Target Country</label>

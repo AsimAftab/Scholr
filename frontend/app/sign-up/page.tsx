@@ -16,7 +16,7 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (user) {
-      router.replace("/dashboard");
+      router.replace(user.profile ? "/dashboard" : "/profile");
     }
   }, [router, user]);
 
@@ -68,7 +68,7 @@ export default function SignUpPage() {
                   password: payload.password,
                   full_name: payload.full_name ?? "",
                 });
-                router.push("/dashboard");
+                router.push("/profile");
               } catch (authError) {
                 setError(authError instanceof Error ? authError.message : "Unable to create your account.");
               } finally {

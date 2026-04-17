@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HiBars3, HiXMark } from "react-icons/hi2";
 
 import { User } from "@/lib/types";
@@ -18,15 +18,16 @@ const appLinks = [
 ];
 
 const landingLinks = [
-  { href: "/#about", label: "About" },
   { href: "/#features", label: "Features" },
   { href: "/#process", label: "Process" },
+  { href: "/#about", label: "About" },
   { href: "/#faq", label: "FAQ" },
 ];
 
 export function SiteShell({ user, onLogout }: SiteShellProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("");
 
   const links = user ? appLinks : landingLinks;
   const isLanding = pathname === "/";
@@ -47,17 +48,63 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
     return true;
   };
 
+  useEffect(() => {
+    if (!isLanding) return;
+
+    const sectionIds = ["about", "features", "process", "faq"];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+    );
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    const handleScroll = () => {
+      if (window.scrollY < 120) setActiveSection("");
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isLanding]);
+
+  const hashOf = (href: string) => href.match(/^\/?#(.+)$/)?.[1] ?? null;
+  const isActive = (href: string) => {
+    if (user) return pathname === href;
+    if (!isLanding) return false;
+    const hash = hashOf(href);
+    if (hash === null) return href === "/" && activeSection === "";
+    return activeSection === hash;
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-900/5 bg-white/85 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-10">
+    <header className="sticky top-0 z-50 border-b border-zinc-100 bg-white/80 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 md:px-10">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl font-black tracking-tighter text-zinc-950">SCHOLR.</span>
+          <span className="text-xl font-extrabold tracking-tight text-zinc-950">SCHOLR.</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-2 rounded-full border border-slate-900/5 bg-white/70 p-1 shadow-sm md:flex">
+        <nav className="hidden items-center gap-8 md:flex">
           {links.map((item) => {
-            const active = user && pathname === item.href;
+            const active = isActive(item.href);
+            const linkClass = `relative text-sm transition-colors ${
+              active
+                ? "font-semibold text-zinc-950 after:absolute after:left-0 after:-bottom-[18px] after:h-[2px] after:w-full after:bg-zinc-950"
+                : "font-medium text-zinc-600 hover:text-zinc-950"
+            }`;
 
             if (isLanding && item.href.startsWith("/#")) {
               return (
@@ -66,7 +113,7 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
                   onClick={() => {
                     scrollToSection(item.href);
                   }}
-                  className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-zinc-950"
+                  className={linkClass}
                 >
                   {item.label}
                 </button>
@@ -74,15 +121,7 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
             }
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  active
-                    ? "bg-zinc-950 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-zinc-950"
-                }`}
-              >
+              <Link key={item.href} href={item.href} className={linkClass}>
                 {item.label}
               </Link>
             );
@@ -90,29 +129,32 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-4 md:flex">
           {user ? (
             <>
               <div className="text-right">
                 <p className="text-sm font-semibold text-zinc-950">{user.full_name}</p>
-                <p className="text-xs text-slate-500">{user.email}</p>
+                <p className="text-xs text-zinc-500">{user.email}</p>
               </div>
               <button
                 type="button"
                 onClick={() => void onLogout?.()}
-                className="rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-white"
+                className="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50"
               >
                 Log out
               </button>
             </>
           ) : (
             <>
-              <Link href="/sign-in" className="rounded-full px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white/70 hover:text-zinc-950">
+              <Link
+                href="/sign-in"
+                className="inline-flex items-center rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50 hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+              >
                 Sign in
               </Link>
               <Link
                 href="/sign-up"
-                className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700"
+                className="inline-flex items-center rounded-lg bg-zinc-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:ring-offset-2"
               >
                 Start free
               </Link>
@@ -121,16 +163,16 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
         </div>
 
         {/* Mobile Menu Button */}
-        <button 
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-zinc-950 shadow-sm md:hidden"
+        <button
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-900 md:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-expanded={isMobileMenuOpen}
           aria-label="Toggle navigation menu"
         >
           {isMobileMenuOpen ? (
-            <HiXMark className="h-6 w-6" />
+            <HiXMark className="h-5 w-5" />
           ) : (
-            <HiBars3 className="h-6 w-6" />
+            <HiBars3 className="h-5 w-5" />
           )}
         </button>
       </div>
@@ -140,6 +182,11 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
         <div className="border-t border-slate-900/5 bg-white/95 p-5 shadow-sm backdrop-blur-xl md:hidden">
           <nav className="flex flex-col gap-4">
             {links.map((item) => {
+              const active = isActive(item.href);
+              const mobileClass = `rounded-lg px-2 py-1 text-left text-lg font-semibold transition ${
+                active ? "bg-zinc-100 text-zinc-950" : "text-zinc-900 hover:bg-slate-100"
+              }`;
+
               if (isLanding && item.href.startsWith("/#")) {
                 return (
                   <button
@@ -148,7 +195,7 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
                       scrollToSection(item.href);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="rounded-lg px-2 py-1 text-left text-lg font-semibold text-zinc-900 transition hover:bg-slate-100"
+                    className={mobileClass}
                   >
                     {item.label}
                   </button>
@@ -159,7 +206,7 @@ export function SiteShell({ user, onLogout }: SiteShellProps) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="rounded-lg px-2 py-1 text-lg font-semibold text-zinc-900 transition hover:bg-slate-100"
+                  className={mobileClass}
                 >
                   {item.label}
                 </Link>

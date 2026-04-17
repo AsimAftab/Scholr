@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { ZodError } from "zod";
 
-import { 
-  HiOutlineEnvelope, 
-  HiOutlineLockClosed, 
+import {
+  HiOutlineEnvelope,
+  HiOutlineLockClosed,
   HiOutlineUserCircle,
   HiOutlineEye,
-  HiOutlineEyeSlash
+  HiOutlineEyeSlash,
+  HiOutlineArrowLeft
 } from "react-icons/hi2";
 import { loginSchema, signupSchema, zodErrors } from "@/lib/validation";
 
@@ -29,22 +30,26 @@ export function AuthForm({ mode, loading, error, onSubmit }: AuthFormProps) {
 
   const isSignup = mode === "sign-up";
 
+  const inputClass =
+    "w-full rounded-xl border border-zinc-200 bg-white pl-11 pr-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 hover:border-zinc-300 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_#ffffff_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:#18181b]";
+  const labelClass = "text-[11px] font-semibold uppercase tracking-wider text-zinc-500";
+
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="rounded-[2.5rem] border border-zinc-200/60 bg-white p-8 md:p-12 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] ring-1 ring-black/5">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-8 md:p-10 shadow-sm">
         <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-950">
-            {isSignup ? "Begin Your Journey" : "Welcome back"}
+          <h1 className="text-[26px] font-semibold tracking-tight text-zinc-950">
+            {isSignup ? "Create your account" : "Welcome back"}
           </h1>
-          <p className="mt-4 text-sm font-medium text-zinc-500 leading-relaxed">
+          <p className="mt-2 text-sm text-zinc-500">
             {isSignup
-              ? "Unlock global opportunities with strategic AI matching."
-              : "Securely access your personalized scholarship strategy."}
+              ? "Find and track scholarships that fit you."
+              : "Sign in to continue your scholarship journey."}
           </p>
         </div>
 
         <form
-          className="mt-10 space-y-5"
+          className="mt-8 space-y-4"
           onSubmit={async (event) => {
             event.preventDefault();
             try {
@@ -66,42 +71,42 @@ export function AuthForm({ mode, loading, error, onSubmit }: AuthFormProps) {
         >
           {isSignup ? (
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Full Name</label>
+              <label className={labelClass}>Full Name</label>
               <div className="relative">
-                <HiOutlineUserCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
+                <HiOutlineUserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 h-4 w-4" />
                 <input
-                  className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/30 pl-11 pr-4 py-3 text-sm outline-none transition focus:border-zinc-950 focus:bg-white focus:ring-1 focus:ring-zinc-950/10 placeholder:text-zinc-300"
+                  className={inputClass}
                   placeholder="John Doe"
                   value={fullName}
                   onChange={(event) => setFullName(event.target.value)}
                 />
               </div>
-              {fieldErrors.full_name ? <p className="mt-1 text-xs text-red-600">{fieldErrors.full_name}</p> : null}
+              {fieldErrors.full_name ? <p className="text-xs text-red-600">{fieldErrors.full_name}</p> : null}
             </div>
           ) : null}
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Email Address</label>
+            <label className={labelClass}>Email Address</label>
             <div className="relative">
-              <HiOutlineEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
+              <HiOutlineEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 h-4 w-4" />
               <input
                 type="email"
-                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/30 pl-11 pr-4 py-3 text-sm outline-none transition focus:border-zinc-950 focus:bg-white focus:ring-1 focus:ring-zinc-950/10 placeholder:text-zinc-300"
+                className={inputClass}
                 placeholder="name@example.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
             </div>
-            {fieldErrors.email ? <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p> : null}
+            {fieldErrors.email ? <p className="text-xs text-red-600">{fieldErrors.email}</p> : null}
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Password</label>
+            <label className={labelClass}>Password</label>
             <div className="relative">
-              <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
+              <HiOutlineLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 h-4 w-4" />
               <input
                 type={showPassword ? "text" : "password"}
-                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/30 pl-11 pr-12 py-3 text-sm outline-none transition focus:border-zinc-950 focus:bg-white focus:ring-1 focus:ring-zinc-950/10 placeholder:text-zinc-300"
+                className={`${inputClass} pr-11`}
                 placeholder="••••••••"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -109,20 +114,20 @@ export function AuthForm({ mode, loading, error, onSubmit }: AuthFormProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors focus:outline-none"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors focus:outline-none"
               >
                 {showPassword ? (
-                  <HiOutlineEye className="h-5 w-5" />
+                  <HiOutlineEye className="h-4 w-4" />
                 ) : (
-                  <HiOutlineEyeSlash className="h-5 w-5" />
+                  <HiOutlineEyeSlash className="h-4 w-4" />
                 )}
               </button>
             </div>
-            {fieldErrors.password ? <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p> : null}
+            {fieldErrors.password ? <p className="text-xs text-red-600">{fieldErrors.password}</p> : null}
           </div>
 
           {error ? (
-            <div className="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600 border border-red-100">
+            <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-medium text-red-600">
               {error}
             </div>
           ) : null}
@@ -130,28 +135,27 @@ export function AuthForm({ mode, loading, error, onSubmit }: AuthFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="group relative w-full overflow-hidden rounded-2xl bg-zinc-950 px-5 py-4 text-sm font-bold text-white transition hover:bg-zinc-800 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 shadow-lg"
+            className="w-full rounded-xl bg-zinc-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 active:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full transition-transform duration-1000 group-hover:translate-x-full" />
-            
-            <span className="relative z-10">
-              {loading ? "Security check..." : isSignup ? "Create account" : "Sign in"}
-            </span>
+            {loading ? (isSignup ? "Creating account..." : "Signing in...") : isSignup ? "Create account" : "Sign in"}
           </button>
         </form>
 
-        <p className="mt-10 text-center text-sm text-zinc-500 font-medium">
+        <p className="mt-8 text-center text-sm text-zinc-500">
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-          <Link href={isSignup ? "/sign-in" : "/sign-up"} className="font-bold text-blue-600 hover:text-blue-500 transition-colors">
+          <Link href={isSignup ? "/sign-in" : "/sign-up"} className="font-semibold text-zinc-900 hover:text-zinc-700 transition-colors">
             {isSignup ? "Sign in" : "Create account"}
           </Link>
         </p>
 
-        {/* Security Badge */}
-        <div className="mt-10 flex items-center justify-center gap-2 border-t border-zinc-100 pt-8 opacity-60">
-          <HiOutlineLockClosed className="h-3.5 w-3.5 text-zinc-400" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Secure & Encrypted</span>
+        <div className="mt-4 flex justify-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-700 transition-colors"
+          >
+            <HiOutlineArrowLeft className="h-3.5 w-3.5" />
+            Back to home
+          </Link>
         </div>
       </div>
     </div>
