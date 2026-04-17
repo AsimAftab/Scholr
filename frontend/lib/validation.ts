@@ -86,7 +86,8 @@ export const profileSchema = z.object({
   country: z
     .string()
     .trim()
-    .optional(),
+    .min(2, "Home country is required.")
+    .refine((value) => countrySet.has(value as (typeof COUNTRIES)[number]), "Select a valid country from the list."),
   target_country: z
     .string()
     .trim()

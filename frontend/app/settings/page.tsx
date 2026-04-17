@@ -85,6 +85,13 @@ export default function SettingsPage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!user.profile) {
+      setProfileError("Complete your academic profile first to enable settings updates.");
+      showToast("Please finish your profile setup first.");
+      router.push("/profile");
+      return;
+    }
+
     try {
       editProfileSchema.parse({ fullName, gender, dateOfBirth, country, gpa: gpa === "" ? 0 : Number(gpa) });
       setProfileError("");

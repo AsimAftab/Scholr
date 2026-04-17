@@ -26,9 +26,6 @@ export default function LandingPage() {
         {/* Hero Section */}
         <HeroSection user={user} />
 
-        {/* About Section */}
-        <AboutSection />
-
         {/* Features Section */}
         <FeaturesSection />
 
@@ -37,6 +34,9 @@ export default function LandingPage() {
 
         {/* Process Section */}
         <ProcessSection />
+
+        {/* About Section */}
+        <AboutSection />
 
         {/* FAQ Section */}
         <FAQSection />
