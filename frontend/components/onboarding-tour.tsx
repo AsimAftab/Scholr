@@ -3,18 +3,51 @@
 import { useEffect, useRef } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "@/lib/auth-context";
+import { useToast } from "@/components/toast";
+
+/**
+ * Polls the DOM for a selector, resolving once the element is found.
+ * Rejects after `timeoutMs` if the element never appears.
+ */
+function waitForElement(
+  selector: string,
+  timeoutMs = 5000,
+  intervalMs = 50
+): Promise<Element> {
+  return new Promise((resolve, reject) => {
+    const el = document.querySelector(selector);
+    if (el) return resolve(el);
+
+    const start = Date.now();
+    const poll = setInterval(() => {
+      const found = document.querySelector(selector);
+      if (found) {
+        clearInterval(poll);
+        return resolve(found);
+      }
+      if (Date.now() - start >= timeoutMs) {
+        clearInterval(poll);
+        reject(new Error(`waitForElement: "${selector}" not found within ${timeoutMs}ms`));
+      }
+    }, intervalMs);
+  });
+}
 
 export function OnboardingTour() {
   const { user, loading, handleCompleteOnboarding } = useAuthContext();
   const router = useRouter();
   const pathname = usePathname();
-  const tourInstance = useRef<any>(null);
+  const { showToast } = useToast();
+  const driverRef = useRef<any>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    // Only start if user is logged in and hasn't completed onboarding
     if (loading || !user || user.onboarding_completed) return;
+    if (startedRef.current) return;
+    if (pathname !== "/dashboard") return;
+    if (!document.querySelector("#dashboard-welcome")) return;
 
     // Initialize driver
     const d = driver({
@@ -62,9 +95,10 @@ export function OnboardingTour() {
             description: "To get those 100% matches, we need to know who you are. Let's head to Settings to finish your basic info.",
             side: "right",
             align: "center",
-            onNextClick: () => {
+            onNextClick: async () => {
               router.push("/settings");
-              setTimeout(() => d.moveNext(), 150);
+              await waitForElement("#settings-personal-card");
+              d.moveNext();
             }
           },
         },
@@ -86,9 +120,10 @@ export function OnboardingTour() {
             description: "Now let's head over to your Academic Profile to dive into your degree goals and credentials.",
             side: "right",
             align: "center",
-            onNextClick: () => {
+            onNextClick: async () => {
               router.push("/profile");
-              setTimeout(() => d.moveNext(), 200);
+              await waitForElement("#profile-history-card");
+              d.moveNext();
             }
           },
         },
@@ -101,11 +136,12 @@ export function OnboardingTour() {
             side: "left",
             align: "start",
           },
-          onHighlighted: () => {
+          onHighlighted: async () => {
             const historyTab = document.getElementById("profile-tab-history");
             if (historyTab) historyTab.click();
 
-            setTimeout(() => d.refresh(), 350);
+            await waitForElement("#profile-history-card");
+            d.refresh();
           }
         },
         // STEP 8: Goals & Aspirations (on /profile)
@@ -117,11 +153,12 @@ export function OnboardingTour() {
             side: "left",
             align: "start",
           },
-          onHighlighted: () => {
+          onHighlighted: async () => {
             const goalsTab = document.getElementById("profile-tab-goals");
             if (goalsTab) goalsTab.click();
 
-            setTimeout(() => d.refresh(), 350);
+            await waitForElement("#profile-goals-card");
+            d.refresh();
           }
         },
         // STEP 9: Documents (on /profile)
@@ -133,11 +170,12 @@ export function OnboardingTour() {
             side: "left",
             align: "start",
           },
-          onHighlighted: () => {
+          onHighlighted: async () => {
             const docsTab = document.getElementById("profile-tab-documents");
             if (docsTab) docsTab.click();
 
-            setTimeout(() => d.refresh(), 350);
+            await waitForElement("#profile-documents-section");
+            d.refresh();
           }
         },
         // STEP 10: Final Completion
@@ -146,25 +184,35 @@ export function OnboardingTour() {
             title: "You're All Set! 🎉",
             description: "Your profile is optimized. You'll now see real matches on your dashboard. Start exploring scholarships!",
             onNextClick: async () => {
-              await handleCompleteOnboarding();
-              router.push("/dashboard");
-              d.destroy();
+              try {
+                await handleCompleteOnboarding();
+                router.push("/dashboard");
+                d.destroy();
+                driverRef.current = null;
+              } catch {
+                d.destroy();
+                driverRef.current = null;
+                startedRef.current = false;
+                showToast("We couldn't finish onboarding. Please check your connection and try again.", "error");
+              }
             }
           },
         }
       ]
     });
 
-    tourInstance.current = d;
+    driverRef.current = d;
+    startedRef.current = true;
+    d.drive();
+  }, [user, loading, pathname, router, handleCompleteOnboarding, showToast]);
 
-    // Start tour based on current location and logic
-    if (!user.onboarding_completed) {
-      if (pathname === "/dashboard") {
-        d.drive();
-      }
-    }
-
-  }, [user, loading, pathname, router, handleCompleteOnboarding]);
+  useEffect(() => {
+    return () => {
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, []);
 
   return null;
 }
+
