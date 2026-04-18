@@ -1,11 +1,10 @@
 import { HiOutlineMagnifyingGlass, HiOutlineSparkles, HiOutlineCpuChip } from "react-icons/hi2";
-import type { IconType } from "react-icons";
 
 type FeatureCard = {
   eyebrow: string;
   title: string;
   copy: string;
-  icon: IconType;
+  icon: React.ComponentType<{ className?: string }>;
   footer: React.ReactNode;
 };
 

@@ -49,6 +49,13 @@ class AuthService:
         self.db.refresh(user)
         return user
 
+    def complete_onboarding(self, user: User) -> User:
+        user.onboarding_completed = True
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
     def set_session_cookie(self, response: Response, user: User) -> None:
         response.set_cookie(
             key=settings.session_cookie_name,

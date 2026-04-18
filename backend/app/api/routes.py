@@ -65,6 +65,14 @@ def update_me(
     return AuthService(db).update_user(current_user, payload)
 
 
+@router.post("/auth/onboarding/complete", response_model=UserRead)
+def complete_onboarding(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserRead:
+    return AuthService(db).complete_onboarding(current_user)
+
+
 @router.post("/profile", response_model=ProfileRead)
 def create_profile(
     payload: ProfileCreate,
