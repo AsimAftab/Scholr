@@ -17,11 +17,16 @@ export const viewport: Viewport = {
   themeColor: "#18181b",
 };
 
+import { OnboardingTour } from "@/components/onboarding-tour";
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>
-        <AppProvider>{children}</AppProvider>
+        <AppProvider>
+          <OnboardingTour />
+          {children}
+        </AppProvider>
       </body>
     </html>
   );

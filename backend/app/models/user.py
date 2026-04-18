@@ -13,5 +13,6 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(50), default="user", index=True)
     profile_id: Mapped[int | None] = mapped_column(ForeignKey("profiles.id"), nullable=True, unique=True)
+    onboarding_completed: Mapped[bool] = mapped_column(default=False)
 
     profile = relationship("Profile", lazy="joined")

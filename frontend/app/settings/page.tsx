@@ -184,7 +184,7 @@ export default function SettingsPage() {
     >
       <div className="mx-auto w-full max-w-3xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Personal Information Card */}
-        <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mt-6">
+        <div id="settings-personal-card" className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mt-6">
           {/* Header */}
           <div className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
             <div className="flex items-center gap-3">
@@ -195,6 +195,7 @@ export default function SettingsPage() {
             </div>
             {!editingProfile ? (
               <button
+                id="settings-edit-button"
                 onClick={handleEditProfile}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-950 text-white text-sm font-semibold shadow-sm transition-all hover:bg-zinc-800 active:scale-95"
               >
@@ -246,6 +247,7 @@ export default function SettingsPage() {
                   <div className="md:col-span-2 space-y-1.5">
                     <label className={labelClass}>Full Name</label>
                     <input
+                      id="settings-full-name"
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
@@ -257,6 +259,7 @@ export default function SettingsPage() {
                     <label className={labelClass}>Gender</label>
                     <div className="relative group">
                       <select
+                        id="settings-gender"
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
                         className={`${inputClass} pl-4 pr-10 appearance-none cursor-pointer`}
@@ -273,6 +276,7 @@ export default function SettingsPage() {
                     <label className={labelClass}>Date of Birth</label>
                     <div className="relative group">
                       <input
+                        id="settings-dob"
                         type="date"
                         value={dateOfBirth}
                         onChange={(e) => setDateOfBirth(e.target.value)}
@@ -299,6 +303,7 @@ export default function SettingsPage() {
                     <label className={labelClass}>Location</label>
                     <div className="relative group">
                       <select
+                        id="settings-country"
                         value={country}
                         onChange={(e) => setCountry(e.target.value)}
                         className={`${inputClass} pl-4 pr-10 appearance-none cursor-pointer`}

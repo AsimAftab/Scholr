@@ -47,6 +47,7 @@ class UserRead(BaseModel):
     email: str
     full_name: str
     role: str
+    onboarding_completed: bool
     profile: ProfileRead | None = None
 
 

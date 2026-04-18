@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { login, logout, me, signup } from "@/lib/api";
+import { completeOnboarding, login, logout, me, signup } from "@/lib/api";
 import { User } from "@/lib/types";
 
 type AuthContextType = {
@@ -16,6 +16,7 @@ type AuthContextType = {
   handleSignup: (payload: { email: string; full_name: string; password: string }) => Promise<User>;
   handleLogin: (payload: { email: string; password: string }) => Promise<User>;
   handleLogout: () => Promise<void>;
+  handleCompleteOnboarding: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,6 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/");
   }
 
+  async function handleCompleteOnboarding() {
+    const updatedUser = await completeOnboarding();
+    setUser(updatedUser);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -74,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         handleSignup,
         handleLogin,
         handleLogout,
+        handleCompleteOnboarding,
       }}
     >
       {children}

@@ -80,6 +80,7 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-tour-id={`nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
                   className={`group flex items-center justify-between rounded-lg px-4 py-2.5 transition-all duration-200 ${
                     active 
                       ? "bg-zinc-800/50 text-white border border-white/5 shadow-sm" 

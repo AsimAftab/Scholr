@@ -68,7 +68,7 @@ export function DashboardOverview({ user, scholarships, matches }: DashboardOver
     <div className="space-y-6">
       {/* Welcome + Profile Banner */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
+        <h1 id="dashboard-welcome" className="text-2xl font-bold tracking-tight text-zinc-950">
           Welcome back, {user.full_name?.split(" ")[0] || "there"}
         </h1>
         {!profileReady && (
@@ -89,7 +89,7 @@ export function DashboardOverview({ user, scholarships, matches }: DashboardOver
       </div>
 
       {/* Stats Row */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div id="dashboard-stats" className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">
@@ -217,7 +217,7 @@ export function DashboardOverview({ user, scholarships, matches }: DashboardOver
         {/* Quick Insights Sidebar */}
         <div className="space-y-4">
           {/* Profile Completeness */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <div id="dashboard-profile-card" className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wide mb-4">Profile</h3>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-zinc-900">{profilePct}% Complete</span>

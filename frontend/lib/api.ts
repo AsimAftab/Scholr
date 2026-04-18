@@ -138,6 +138,12 @@ export async function updateAccountSettings(payload: {
   });
 }
 
+export async function completeOnboarding(): Promise<User> {
+  return request<User>("/auth/onboarding/complete", {
+    method: "POST",
+  });
+}
+
 export async function getAdminOverview(): Promise<AdminOverview> {
   return request<AdminOverview>("/admin/overview");
 }
