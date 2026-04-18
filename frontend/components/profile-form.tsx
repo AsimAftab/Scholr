@@ -45,6 +45,9 @@ const EMPTY_WORK_EXPERIENCE: WorkExperience = {
   description: "",
 };
 
+const getEducationGpaInputs = (educations: Education[]) =>
+  educations.map((education) => education.gpa?.toString() ?? "");
+
 const fieldOfStudyCategories = {
   "STEM & Technology": [
     "Computer Science",
@@ -153,6 +156,9 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
 
   // Education entries
   const [educations, setEducations] = useState<Education[]>(initialValue.educations ?? []);
+  const [educationGpaInputs, setEducationGpaInputs] = useState<string[]>(
+    getEducationGpaInputs(initialValue.educations ?? [])
+  );
   // Work experience entries
   const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>(initialValue.work_experiences ?? []);
 
@@ -174,6 +180,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
     setForm(initialValue);
     setGpaInput(initialValue.gpa?.toString() ?? "");
     setEducations(initialValue.educations ?? []);
+    setEducationGpaInputs(getEducationGpaInputs(initialValue.educations ?? []));
     setWorkExperiences(initialValue.work_experiences ?? []);
     setFormError("");
     setErrors({});
@@ -184,6 +191,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
     setForm(initialValue);
     setGpaInput(initialValue.gpa?.toString() ?? "");
     setEducations(initialValue.educations ?? []);
+    setEducationGpaInputs(getEducationGpaInputs(initialValue.educations ?? []));
     setWorkExperiences(initialValue.work_experiences ?? []);
     setFormError("");
     setErrors({});
@@ -198,10 +206,23 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
   const labelClass = "text-[10px] font-black uppercase text-slate-400 px-1 tracking-[0.15em] transition-colors";
 
   // Education helpers
-  const addEducation = () => setEducations((prev) => [...prev, { ...EMPTY_EDUCATION }]);
-  const removeEducation = (index: number) => setEducations((prev) => prev.filter((_, i) => i !== index));
+  const addEducation = () => {
+    setEducations((prev) => [...prev, { ...EMPTY_EDUCATION }]);
+    setEducationGpaInputs((prev) => [...prev, ""]);
+  };
+  const removeEducation = (index: number) => {
+    setEducations((prev) => prev.filter((_, i) => i !== index));
+    setEducationGpaInputs((prev) => prev.filter((_, i) => i !== index));
+  };
   const updateEducation = (index: number, field: keyof Education, value: string | number | undefined) => {
     setEducations((prev) => prev.map((edu, i) => (i === index ? { ...edu, [field]: value } : edu)));
+  };
+  const updateEducationGpaInput = (index: number, value: string) => {
+    setEducationGpaInputs((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
   };
 
   // Work experience helpers
@@ -346,7 +367,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
       {activeTab === "history" && (
         <div className="animate-in fade-in duration-300 space-y-6">
           {/* Academic Details Card */}
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+          <div id="profile-history-card" className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
             <div className="p-6 md:p-8 flex items-center gap-3 bg-zinc-50/50 border-b border-zinc-100">
               <div className="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center shrink-0">
                 <HiOutlineAcademicCap className="w-5 h-5 text-zinc-950" />
@@ -550,13 +571,39 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                           <label className={labelClass}>GPA</label>
                           <input
                             className={inputClassName}
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="10"
+                            type="text"
+                            inputMode="decimal"
                             disabled={!isEditing}
-                            value={edu.gpa ?? ""}
-                            onChange={(e) => updateEducation(index, "gpa", e.target.value ? Number(e.target.value) : undefined)}
+                            value={educationGpaInputs[index] ?? ""}
+                            onChange={(e) => {
+                              const nextValue = e.target.value;
+                              if (nextValue !== "" && !/^\d*\.?\d{0,2}$/.test(nextValue)) return;
+                              updateEducationGpaInput(index, nextValue);
+
+                              if (nextValue === "") {
+                                updateEducation(index, "gpa", undefined);
+                                return;
+                              }
+                              const value = Number.parseFloat(nextValue);
+                              if (Number.isNaN(value) || !Number.isFinite(value)) return;
+                              updateEducation(index, "gpa", value);
+                            }}
+                            onBlur={(e) => {
+                              const rawValue = e.target.value.trim();
+                              if (rawValue === "") {
+                                updateEducationGpaInput(index, "");
+                                updateEducation(index, "gpa", undefined);
+                                return;
+                              }
+                              const value = Number.parseFloat(rawValue);
+                              if (Number.isNaN(value) || !Number.isFinite(value)) {
+                                updateEducationGpaInput(index, edu.gpa?.toString() ?? "");
+                                return;
+                              }
+                              const clampedValue = Math.round(Math.min(10, Math.max(0, value)) * 100) / 100;
+                              updateEducationGpaInput(index, clampedValue.toString());
+                              updateEducation(index, "gpa", clampedValue);
+                            }}
                             placeholder="e.g. 3.8"
                           />
                         </div>
@@ -612,7 +659,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
       {/* Goals & Aspirations Tab */}
       {activeTab === "goals" && (
         <div className="animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+          <div id="profile-goals-card" className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
             <div className="p-6 md:p-8 flex items-center gap-3 bg-zinc-50/50 border-b border-zinc-100">
               <div className="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center shrink-0">
                 <HiOutlineGlobeAlt className="w-5 h-5 text-zinc-950" />
