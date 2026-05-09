@@ -87,7 +87,11 @@ export default function ProfilePage() {
               setUser({ ...user, profile: saved });
               showToast("Profile saved successfully.");
               if (isMounted.current) {
-                router.push("/dashboard");
+                if (user.onboarding_completed) {
+                  router.push("/dashboard");
+                } else if (typeof window !== "undefined" && (window as any).__advanceScholrTour) {
+                  (window as any).__advanceScholrTour();
+                }
               }
             } catch (saveError) {
               setError(saveError instanceof Error ? saveError.message : "Unable to save your profile.");

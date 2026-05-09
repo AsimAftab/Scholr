@@ -24,21 +24,40 @@ export default function DashboardPage() {
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (user?.role !== "admin") {
-      getScholarships()
-        .then(setScholarships)
-        .catch(() => setError("Unable to load scholarships."));
-    }
-  }, [user]);
+    if (user?.role === "admin") return;
 
-  useEffect(() => {
-    if (user?.role !== "admin" && user?.profile) {
-      getMatches()
-        .then((response) => setMatches(response.matches))
-        .catch(() => setError("Unable to load scholarship matches."));
-    } else {
-      setMatches([]);
-    }
+    let isMounted = true;
+    setError("");
+
+    const fetchData = async () => {
+      try {
+        const fetchedScholarships = await getScholarships();
+        if (isMounted) setScholarships(fetchedScholarships);
+      } catch (e) {
+        if (isMounted) setError("Unable to load scholarships.");
+      }
+
+      if (user?.profile) {
+        try {
+          const response = await getMatches();
+          if (isMounted) {
+            setMatches(response.matches);
+            // Clear error if we successfully loaded matches and there wasn't a previous error
+            setError((prev) => prev === "Unable to load scholarship matches." ? "" : prev);
+          }
+        } catch (e) {
+          if (isMounted) setError("Unable to load scholarship matches.");
+        }
+      } else {
+        if (isMounted) setMatches([]);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   if (loading) {

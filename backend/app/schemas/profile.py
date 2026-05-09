@@ -23,6 +23,8 @@ class ProfileBase(BaseModel):
     @field_validator("country", "target_country")
     @classmethod
     def validate_country(cls, value: str) -> str:
+        if value == "":
+            return value
         if value not in COUNTRIES:
             raise ValueError("Select a valid country from the list.")
         return value

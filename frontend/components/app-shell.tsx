@@ -65,14 +65,14 @@ export function AppShell({ user, title, subtitle, onLogout, children, compact = 
     <div className={`min-h-screen bg-zinc-50 lg:grid lg:grid-cols-[280px_1fr] ${lockViewport ? "lg:h-screen lg:overflow-hidden" : ""}`}>
       <aside className="lg:sticky lg:top-0 lg:h-screen border-r border-zinc-200/50 bg-[#09090b] px-4 py-8 text-white flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-3.5 px-4 mb-10">
+          <div id="sidebar-logo" className="flex items-center gap-3.5 px-4 mb-10">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-100 shadow-[0_4px_12px_rgba(255,255,255,0.1)]">
               <span className="text-[14px] font-black text-zinc-950 tracking-tight">S</span>
             </div>
             <span className="text-lg font-extrabold tracking-[-0.03em] text-white">SCHOLR.</span>
           </div>
 
-          <nav className="space-y-1.5">
+          <nav id="sidebar-nav" className="space-y-1.5">
             {navItems.map((item) => {
               const active = pathname === item.href;
               const Icon = item.icon;

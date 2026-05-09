@@ -19,7 +19,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { updateAccountSettings, createProfile } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { Profile } from "@/lib/types";
+import { Profile, DegreeLevel } from "@/lib/types";
 import { COUNTRIES } from "@/lib/countries";
 import { editProfileSchema, changePasswordSchema, zodErrors } from "@/lib/validation";
 
@@ -85,12 +85,6 @@ export default function SettingsPage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user.profile) {
-      setProfileError("Complete your academic profile first to enable settings updates.");
-      showToast("Please finish your profile setup first.");
-      router.push("/profile");
-      return;
-    }
 
     try {
       editProfileSchema.parse({ fullName, gender, dateOfBirth, country, gpa: gpa === "" ? 0 : Number(gpa) });
@@ -111,6 +105,13 @@ export default function SettingsPage() {
       if (dateOfBirth) profilePayload.date_of_birth = dateOfBirth;
       if (country) profilePayload.country = country;
       if (gpa !== undefined && gpa !== null) profilePayload.gpa = gpa === "" ? 0 : Number(gpa);
+
+      // Supply required fields if creating a new profile from the Settings page
+      if (!user.profile) {
+        profilePayload.target_country = "";
+        profilePayload.degree_level = "" as unknown as DegreeLevel;
+        profilePayload.field_of_study = "";
+      }
 
       const [, updatedProfile] = await Promise.all([
         updateAccountSettings({ full_name: fullName.trim() }),

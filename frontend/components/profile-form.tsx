@@ -239,6 +239,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
 
   return (
     <form
+      id="profile-form-wrapper"
       className="space-y-8 animate-in fade-in duration-500 pb-20"
       onSubmit={async (event) => {
         event.preventDefault();
@@ -283,7 +284,11 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           if (error instanceof ZodError) {
             const nextErrors = zodErrors(error);
             setErrors(nextErrors);
-            setFormError("Profile was not saved. Fix the highlighted field and try again.");
+            const errorKeys = Object.keys(nextErrors).join(", ");
+            setFormError(`Profile was not saved. Please fix these fields: ${errorKeys}`);
+          } else {
+            setFormError("An unexpected error occurred while validating the profile.");
+            console.error(error);
           }
         }
       }}
@@ -322,8 +327,8 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
               type="button"
               onClick={() => setActiveTab("history")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "history"
-                  ? "bg-white text-zinc-900 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-700"
+                ? "bg-white text-zinc-900 shadow-sm"
+                : "text-zinc-500 hover:text-zinc-700"
                 }`}
             >
               Academic History
@@ -336,8 +341,8 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
               type="button"
               onClick={() => setActiveTab("goals")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "goals"
-                  ? "bg-white text-zinc-900 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-700"
+                ? "bg-white text-zinc-900 shadow-sm"
+                : "text-zinc-500 hover:text-zinc-700"
                 }`}
             >
               Goals
@@ -350,8 +355,8 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
               type="button"
               onClick={() => setActiveTab("documents")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "documents"
-                  ? "bg-white text-zinc-900 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-700"
+                ? "bg-white text-zinc-900 shadow-sm"
+                : "text-zinc-500 hover:text-zinc-700"
                 }`}
             >
               Documents
@@ -972,7 +977,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
       )}
 
       {isEditing && (
-        <div className="flex justify-end pt-2 gap-4">
+        <div className="flex justify-end pt-6 mt-8 border-t border-zinc-200 gap-4">
           <button
             type="button"
             onClick={handleCancel}
