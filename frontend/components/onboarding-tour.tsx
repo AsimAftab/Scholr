@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
+import Shepherd from "shepherd.js";
+import "shepherd.js/dist/css/shepherd.css";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "@/lib/auth-context";
 import { useToast } from "@/components/toast";
@@ -40,179 +40,234 @@ export function OnboardingTour() {
   const router = useRouter();
   const pathname = usePathname();
   const { showToast } = useToast();
-  const driverRef = useRef<any>(null);
+  const tourRef = useRef<any>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
-    if (loading || !user || user.onboarding_completed) return;
+    // Expose global method to advance tour from external components (like profile form success)
+    (window as any).__advanceScholrTour = () => {
+      if (tourRef.current) tourRef.current.next();
+    };
+
+    if (loading || !user || user.onboarding_completed || user.role === "admin") return;
     if (startedRef.current) return;
     if (pathname !== "/dashboard") return;
-    if (!document.querySelector("#dashboard-welcome")) return;
+    let isCancelled = false;
 
-    // Initialize driver
-    const d = driver({
-      showProgress: true,
-      animate: true,
-      allowClose: false,
-      overlayColor: "rgba(0, 0, 0, 0.75)",
-      stagePadding: 4,
-      steps: [
-        // STEP 1: Welcome (on /dashboard)
-        {
-          element: "#dashboard-welcome",
-          popover: {
-            title: "Welcome to Scholr! 🎓",
-            description: "We're excited to help you find your perfect scholarship. Let's take a quick tour to set up your AI matching engine.",
-            side: "bottom",
-            align: "start",
-          },
+    const startTour = async () => {
+      try {
+        await waitForElement("#dashboard-stats", 5000);
+      } catch (err) {
+        return;
+      }
+      if (isCancelled || startedRef.current) return;
+
+      const tour = new Shepherd.Tour({
+        defaultStepOptions: {
+          cancelIcon: { enabled: true },
+          classes: 'shepherd-theme-custom',
+          scrollTo: { behavior: 'smooth', block: 'center' }
         },
-        // STEP 2: Stats (on /dashboard)
-        {
-          element: "#dashboard-stats",
-          popover: {
-            title: "Your Matching Engine",
-            description: "Scholr uses AI to calculate match scores based on your profile. These stats will update as you complete your info.",
-            side: "top",
-            align: "center",
-          },
-        },
-        // STEP 3: Navigation Hub (on /dashboard)
-        {
-          element: "aside",
-          popover: {
-            title: "Navigation Hub",
-            description: "This sidebar is your home base. You can quickly jump between your Dashboard, Catalog, and Academic Profile.",
-            side: "right",
-            align: "start",
-          },
-        },
-        // STEP 4: Settings Link (on /dashboard)
-        {
-          element: '[data-tour-id="nav-settings"]',
-          popover: {
-            title: "Profile Readiness",
-            description: "To get those 100% matches, we need to know who you are. Let's head to Settings to finish your basic info.",
-            side: "right",
-            align: "center",
-            onNextClick: async () => {
+        useModalOverlay: true
+      });
+
+      tour.on('cancel', async () => {
+        try {
+          await handleCompleteOnboarding();
+        } catch (error) {
+          console.error("Failed to mark onboarding as complete on skip:", error);
+        }
+      });
+
+      const skipButton = {
+        text: 'Skip',
+        action: tour.cancel,
+        classes: 'shepherd-button-secondary'
+      };
+      const backButton = {
+        text: 'Back',
+        action: tour.back,
+        classes: 'shepherd-button-secondary'
+      };
+      const nextButton = {
+        text: 'Next',
+        action: tour.next,
+        classes: 'shepherd-button-primary'
+      };
+
+      tour.addStep({
+        id: 'step-1',
+        attachTo: { element: '#sidebar-logo', on: 'right' },
+        title: "Welcome to Scholr! 🎓",
+        text: "Scholr streamlines your search for global educational funding using advanced AI. Let's take a quick tour to set up your AI matching engine.",
+        buttons: [skipButton, nextButton]
+      });
+
+      tour.addStep({
+        id: 'step-2',
+        attachTo: { element: '#dashboard-stats', on: 'top' },
+        title: "Your Matching Engine ⚡",
+        text: "Scholr uses AI to calculate match scores based on your profile. These stats will update as you complete your info.",
+        buttons: [skipButton, backButton, nextButton]
+      });
+
+      tour.addStep({
+        id: 'step-3',
+        attachTo: { element: '#sidebar-nav', on: 'right' },
+        title: "Navigation Panel 🧭",
+        text: "This sidebar is your home base. You can quickly jump between your Dashboard, Catalog, and Academic Profile.",
+        buttons: [skipButton, backButton, nextButton]
+      });
+
+      tour.addStep({
+        id: 'step-4',
+        attachTo: { element: '[data-tour-id="nav-settings"]', on: 'right' },
+        title: "Profile Readiness 📋",
+        text: "To get those 100% matches, we need to know who you are. Let's head to Settings to finish your basic info.",
+        buttons: [
+          skipButton,
+          backButton,
+          {
+            text: 'Next',
+            classes: 'shepherd-button-primary',
+            action: async () => {
               router.push("/settings");
               await waitForElement("#settings-personal-card");
-              d.moveNext();
+              tour.next();
+            }
+          }
+        ]
+      });
+
+      tour.addStep({
+        id: 'step-5',
+        attachTo: { element: '#settings-personal-card', on: 'left' },
+        title: "Your Personal Identity 👤",
+        text: "Click the 'Edit Profile' button to fill in your details like location and GPA. Save your changes, then click Next to continue the tour!",
+        buttons: [
+          skipButton,
+          {
+            text: 'Back',
+            classes: 'shepherd-button-secondary',
+            action: async () => {
+              router.push("/dashboard");
+              await waitForElement('[data-tour-id="nav-settings"]');
+              tour.back();
             }
           },
-        },
-        // STEP 5: Personal Information Card (on /settings)
-        {
-          element: "#settings-personal-card",
-          popover: {
-            title: "Your Personal Identity 👤",
-            description: "Please fill in your name and location by editing your profile so our AI can refine your matches.",
-            side: "left",
-            align: "start",
-          }
-        },
-        // STEP 6: Transition to Profile (via sidebar)
-        {
-          element: '[data-tour-id="nav-academic-info"]',
-          popover: {
-            title: "Next: Academic Standing",
-            description: "Now let's head over to your Academic Profile to dive into your degree goals and credentials.",
-            side: "right",
-            align: "center",
-            onNextClick: async () => {
+          nextButton
+        ]
+      });
+
+      tour.addStep({
+        id: 'step-6',
+        attachTo: { element: '[data-tour-id="nav-academic-info"]', on: 'right' },
+        title: "Next: Academic Standing 🏫",
+        text: "Now let's head over to your Academic Profile to dive into your degree goals and credentials.",
+        buttons: [
+          skipButton,
+          backButton,
+          {
+            text: 'Next',
+            classes: 'shepherd-button-primary',
+            action: async () => {
               router.push("/profile");
               await waitForElement("#profile-history-card");
-              d.moveNext();
+              tour.next();
             }
-          },
-        },
-        // STEP 7: Academic History (on /profile)
-        {
-          element: "#profile-history-card",
-          popover: {
-            title: "Step 1: Academic Credentials 📚",
-            description: "Please complete your Academic History by editing your profile. Filling in your GPA and test scores is critical for our AI reasoning engine.",
-            side: "left",
-            align: "start",
-          },
-          onHighlighted: async () => {
+          }
+        ]
+      });
+
+      tour.addStep({
+        id: 'step-7',
+        attachTo: { element: '#profile-form-wrapper', on: 'left' },
+        scrollTo: false,
+        title: "Complete Your Profile 📋",
+        text: "Fill out your details across the tabs, then click Next on this tour to save and finish!",
+        when: {
+          show: async () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             const historyTab = document.getElementById("profile-tab-history");
             if (historyTab) historyTab.click();
-
             await waitForElement("#profile-history-card");
-            d.refresh();
           }
         },
-        // STEP 8: Goals & Aspirations (on /profile)
-        {
-          element: "#profile-goals-card",
-          popover: {
-            title: "Step 2: Future Goals 🎯",
-            description: "Please fill in your target degree and location. This allows our AI to find the best possible scholarships for your future.",
-            side: "left",
-            align: "start",
+        buttons: [
+          skipButton,
+          {
+            text: 'Back',
+            classes: 'shepherd-button-secondary',
+            action: async () => {
+              router.push("/settings");
+              await waitForElement('[data-tour-id="nav-academic-info"]');
+              tour.back();
+            }
           },
-          onHighlighted: async () => {
-            const goalsTab = document.getElementById("profile-tab-goals");
-            if (goalsTab) goalsTab.click();
-
-            await waitForElement("#profile-goals-card");
-            d.refresh();
+          {
+            text: 'Next',
+            classes: 'shepherd-button-primary',
+            action: () => {
+              const submitBtn = document.querySelector<HTMLButtonElement>('#profile-form-wrapper button[type="submit"]');
+              if (submitBtn) {
+                // Click the hidden or visible submit button. 
+                // We DO NOT call tour.next() here. It will be called by the page.tsx on success!
+                submitBtn.click();
+              } else {
+                tour.next();
+              }
+            }
           }
-        },
-        // STEP 9: Documents (on /profile)
-        {
-          element: "#profile-documents-section",
-          popover: {
-            title: "Step 3: Document Uploads 📄",
-            description: "Finally, upload your resume or add your work experience. These details provide crucial context for competitive awards.",
-            side: "left",
-            align: "start",
-          },
-          onHighlighted: async () => {
-            const docsTab = document.getElementById("profile-tab-documents");
-            if (docsTab) docsTab.click();
+        ]
+      });
 
-            await waitForElement("#profile-documents-section");
-            d.refresh();
-          }
-        },
-        // STEP 10: Final Completion
-        {
-          popover: {
-            title: "You're All Set! 🎉",
-            description: "Your profile is optimized. You'll now see real matches on your dashboard. Start exploring scholarships!",
-            onNextClick: async () => {
+      tour.addStep({
+        id: 'step-8',
+        title: "You're All Set! 🎉",
+        text: "Your profile is optimized. You'll now see real matches on your dashboard. Start exploring scholarships!",
+        buttons: [
+          backButton,
+          {
+            text: 'Finish',
+            classes: 'shepherd-button-primary',
+            action: async () => {
               try {
                 await handleCompleteOnboarding();
                 router.push("/dashboard");
-                d.destroy();
-                driverRef.current = null;
+                tour.complete();
+                tourRef.current = null;
               } catch {
-                d.destroy();
-                driverRef.current = null;
+                tour.cancel();
+                tourRef.current = null;
                 startedRef.current = false;
                 showToast("We couldn't finish onboarding. Please check your connection and try again.", "error");
               }
             }
-          },
-        }
-      ]
-    });
+          }
+        ]
+      });
 
-    driverRef.current = d;
-    startedRef.current = true;
-    d.drive();
+      tourRef.current = tour;
+      startedRef.current = true;
+      tour.start();
+    };
+
+    startTour();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [user, loading, pathname, router, handleCompleteOnboarding, showToast]);
 
   useEffect(() => {
     return () => {
-      driverRef.current?.destroy();
-      driverRef.current = null;
+      if (tourRef.current) {
+        tourRef.current.cancel();
+        tourRef.current = null;
+      }
+      delete (window as any).__advanceScholrTour;
     };
   }, []);
 
   return null;
 }
-

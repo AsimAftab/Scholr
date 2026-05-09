@@ -30,3 +30,110 @@ body {
   background: #09090b;
   color: #fafafa;
 }
+
+/* Custom Shepherd Theme */
+.shepherd-theme-custom {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1) !important;
+  font-family: 'Inter', sans-serif !important;
+  max-width: 400px !important;
+}
+
+.shepherd-theme-custom .shepherd-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+  padding: 14px 24px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.shepherd-theme-custom .shepherd-title {
+  font-weight: 800 !important;
+  font-size: 1.35rem !important;
+  color: #18181b !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.2 !important;
+}
+
+.shepherd-theme-custom .shepherd-text {
+  padding: 16px 24px 16px 24px !important;
+  font-size: 1rem !important;
+  line-height: 1.65 !important;
+  color: #3f3f46 !important;
+}
+
+.shepherd-theme-custom .shepherd-footer {
+  background: transparent !important;
+  padding: 12px 24px 16px 24px !important;
+  border-top: none !important;
+  border-radius: 0 0 16px 16px !important;
+  gap: 8px !important;
+}
+
+.shepherd-theme-custom .shepherd-button {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  padding: 10px 18px !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.shepherd-theme-custom .shepherd-button-secondary {
+  background: #ffffff !important;
+  color: #09090b !important;
+  border: 1px solid #d4d4d8 !important;
+}
+
+.shepherd-theme-custom .shepherd-button-secondary:hover {
+  background: #f4f4f5 !important;
+}
+
+.shepherd-theme-custom .shepherd-button-primary {
+  background: #09090b !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.shepherd-theme-custom .shepherd-button-primary:hover {
+  background: #27272a !important;
+  transform: translateY(-1px) !important;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon {
+  color: #a1a1aa !important;
+  font-size: 1.4rem !important;
+  font-weight: 500 !important;
+  transition: color 0.2s ease, transform 0.2s ease !important;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: #09090b !important;
+  transform: scale(1.1) !important;
+}
+
+/* Arrow Styling */
+.shepherd-theme-custom .shepherd-arrow:before {
+  background: #ffffff !important;
+}
+
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='top'] .shepherd-arrow:before {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='bottom'] .shepherd-arrow:before {
+  border-top: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='left'] .shepherd-arrow:before {
+  border-top: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.shepherd-theme-custom.shepherd-element[data-popper-placement^='right'] .shepherd-arrow:before {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.15) !important;
+}

@@ -68,8 +68,8 @@ export function DashboardOverview({ user, scholarships, matches }: DashboardOver
     <div className="space-y-6">
       {/* Welcome + Profile Banner */}
       <div>
-        <h1 id="dashboard-welcome" className="text-2xl font-bold tracking-tight text-zinc-950">
-          Welcome back, {user.full_name?.split(" ")[0] || "there"}
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
+          {user.onboarding_completed ? "Welcome back, " : "Welcome, "}{user.full_name?.split(" ")[0] || "there"}
         </h1>
         {!profileReady && (
           <Link
@@ -158,11 +158,10 @@ export function DashboardOverview({ user, scholarships, matches }: DashboardOver
                           {match.country}
                         </span>
                         {match.deadline && (
-                          <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${
-                            isDeadlinePast(match.deadline)
+                          <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${isDeadlinePast(match.deadline)
                               ? "bg-red-50 text-red-600"
                               : "bg-zinc-100 text-zinc-600"
-                          }`}>
+                            }`}>
                             {isDeadlinePast(match.deadline) ? "Expired" : formatDeadline(match.deadline)}
                           </span>
                         )}
@@ -176,9 +175,8 @@ export function DashboardOverview({ user, scholarships, matches }: DashboardOver
                   {/* Score bar */}
                   <div className="mt-3 flex h-1.5 rounded-full bg-zinc-100 overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${
-                        match.match_score >= 70 ? "bg-emerald-500" : match.match_score >= 40 ? "bg-amber-500" : "bg-red-400"
-                      }`}
+                      className={`h-full rounded-full transition-all ${match.match_score >= 70 ? "bg-emerald-500" : match.match_score >= 40 ? "bg-amber-500" : "bg-red-400"
+                        }`}
                       style={{ width: `${match.match_score}%` }}
                     />
                   </div>
