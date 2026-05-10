@@ -257,6 +257,11 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           const normalizedResumeUrl = (formToValidate.resume_url ?? "").trim();
           formToValidate.resume_url = normalizedResumeUrl === "" ? undefined : normalizedResumeUrl;
 
+          if (!formToValidate.resume_url) {
+            formToValidate.resume_is_accessible = undefined;
+            formToValidate.resume_format = undefined;
+          }
+
           if (formToValidate.field_of_study === "Other") {
             formToValidate.field_of_study = "";
           }
@@ -827,8 +832,57 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
                   placeholder="https://link-to-your-resume.pdf"
                 />
                 {errors.resume_url ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.resume_url}</span> : null}
-                <p className="px-1 text-xs text-slate-400 font-medium mt-1">Provide a direct link via Google Drive, Dropbox, etc.</p>
+                <p className="px-1 text-xs text-slate-400 font-medium mt-1">Provide a direct link via Google Drive (drive.google.com).</p>
               </div>
+
+              {form.resume_url && form.resume_url.trim() !== "" && (
+                <div className="mt-6 space-y-6 max-w-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
+                    <label className="flex items-start gap-3 px-1 mt-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.resume_is_accessible ?? false}
+                        disabled={!isEditing}
+                        onChange={(e) =>
+                          setForm((current) => ({
+                            ...current,
+                            resume_is_accessible: e.target.checked,
+                          }))
+                        }
+                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-zinc-950 focus:ring-zinc-950/20"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-zinc-900">I confirm this Google Drive link is publicly accessible</span>
+                        <span className="text-xs text-slate-500 font-medium">Anyone with the link must be able to view it.</span>
+                        {errors.resume_is_accessible ? <span className="block text-sm text-red-700 font-medium mt-1">{errors.resume_is_accessible}</span> : null}
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className={`space-y-1.5 transition-colors ${isEditing ? 'focus-within:text-zinc-950' : ''}`}>
+                    <label className={labelClass}>Resume Format</label>
+                    <div className="relative group">
+                      <select
+                        className={selectClassName}
+                        disabled={!isEditing}
+                        value={form.resume_format ?? ""}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            resume_format: event.target.value as "EuroPass" | "Normal",
+                          }))
+                        }
+                      >
+                        <option value="">Select format</option>
+                        <option value="Normal">Normal Format</option>
+                        <option value="EuroPass">EuroPass Format</option>
+                      </select>
+                      <HiOutlineChevronDown className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors ${isEditing ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300'}`} />
+                    </div>
+                    {errors.resume_format ? <span className="block text-sm text-red-700 font-medium px-1 mt-1">{errors.resume_format}</span> : null}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

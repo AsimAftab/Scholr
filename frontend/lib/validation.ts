@@ -114,9 +114,35 @@ export const profileSchema = z.object({
     .string()
     .refine((val) => !val || !isNaN(Date.parse(val)), "Invalid date.")
     .optional(),
-  resume_url: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
+  resume_url: z
+    .string()
+    .url("Must be a valid URL")
+    .refine((val) => val.includes("drive.google.com"), "Only Google Drive links (drive.google.com) are allowed.")
+    .or(z.literal(""))
+    .optional(),
+  resume_is_accessible: z.boolean().optional(),
+  resume_format: z.enum(["EuroPass", "Normal"], {
+    errorMap: () => ({ message: "Select a valid resume format." }),
+  }).optional(),
   educations: z.array(educationSchema).optional(),
   work_experiences: z.array(workExperienceSchema).optional(),
+}).superRefine((data, ctx) => {
+  if (data.resume_url && data.resume_url.trim() !== "") {
+    if (!data.resume_is_accessible) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "You must confirm that the Google Drive link is publicly accessible.",
+        path: ["resume_is_accessible"],
+      });
+    }
+    if (!data.resume_format) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "You must specify the resume format (EuroPass or Normal).",
+        path: ["resume_format"],
+      });
+    }
+  }
 });
 
 export type FieldErrors = Record<string, string>;
