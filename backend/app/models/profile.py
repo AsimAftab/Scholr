@@ -1,4 +1,4 @@
-from sqlalchemy import Float, Integer, String
+from sqlalchemy import Boolean, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -18,6 +18,8 @@ class Profile(Base):
     gender: Mapped[str | None] = mapped_column(String(50), nullable=True)
     date_of_birth: Mapped[str | None] = mapped_column(String(50), nullable=True)
     resume_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    resume_is_accessible: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    resume_format: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     educations = relationship("Education", cascade="all, delete-orphan", lazy="joined")
     work_experiences = relationship("WorkExperience", cascade="all, delete-orphan", lazy="joined")

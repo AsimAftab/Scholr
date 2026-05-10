@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 from app.schemas.country_options import COUNTRIES
 from app.schemas.education import EducationCreate, EducationRead
@@ -18,8 +18,9 @@ class ProfileBase(BaseModel):
     ielts_score: float | None = Field(None, ge=0, le=9.0)
     gender: Literal["Male", "Female", "Other"] | None = Field(None, examples=["Male", "Female", "Other"])
     date_of_birth: date | None = Field(None, examples=["2000-01-01"])
-    resume_url: HttpUrl | None = Field(None, examples=["https://example.com/resume.pdf"])
-
+    resume_url: HttpUrl | None = Field(None, examples=["https://drive.google.com/file/d/123/view"])
+    resume_is_accessible: bool | None = Field(None, examples=[True])
+    resume_format: Literal["EuroPass", "Normal"] | None = Field(None, examples=["Normal"])
     @field_validator("country", "target_country")
     @classmethod
     def validate_country(cls, value: str) -> str:
@@ -41,9 +42,27 @@ class ProfileBase(BaseModel):
         return value
 
 
+
 class ProfileCreate(ProfileBase):
     educations: list[EducationCreate] = Field(default_factory=list)
     work_experiences: list[WorkExperienceCreate] = Field(default_factory=list)
+
+    @field_validator("resume_url")
+    @classmethod
+    def validate_resume_url(cls, value: HttpUrl | None) -> HttpUrl | None:
+        if value is not None:
+            if "drive.google.com" not in str(value):
+                raise ValueError("Only Google Drive links (drive.google.com) are allowed for resumes.")
+        return value
+
+    @model_validator(mode="after")
+    def validate_resume_metadata(self) -> "ProfileCreate":
+        if self.resume_url is not None:
+            if not self.resume_is_accessible:
+                raise ValueError("You must confirm that the Google Drive link is publicly accessible.")
+            if not self.resume_format:
+                raise ValueError("You must specify the resume format (EuroPass or Normal).")
+        return self
 
 
 class ProfileRead(ProfileBase):

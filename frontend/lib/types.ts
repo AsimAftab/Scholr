@@ -40,6 +40,8 @@ export type Profile = {
   gender?: string;
   date_of_birth?: string;
   resume_url?: string;
+  resume_is_accessible?: boolean;
+  resume_format?: "EuroPass" | "Normal";
   educations?: Education[];
   work_experiences?: WorkExperience[];
 };
