@@ -117,7 +117,13 @@ export const profileSchema = z.object({
   resume_url: z
     .string()
     .url("Must be a valid URL")
-    .refine((val) => val.includes("drive.google.com"), "Only Google Drive links (drive.google.com) are allowed.")
+    .refine((val) => {
+      try {
+        return new URL(val).hostname === "drive.google.com";
+      } catch {
+        return false;
+      }
+    }, "Only Google Drive links (drive.google.com) are allowed.")
     .or(z.literal(""))
     .optional(),
   resume_is_accessible: z.boolean().optional(),

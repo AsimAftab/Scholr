@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import Literal
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
@@ -9,8 +10,8 @@ from app.schemas.work_experience import WorkExperienceCreate, WorkExperienceRead
 
 
 class ProfileBase(BaseModel):
-    country: str = Field(..., examples=["Nepal"])
-    target_country: str = Field(..., examples=["Canada"])
+    country: str | None = Field(None, examples=["Nepal"])
+    target_country: str | None = Field(None, examples=["Canada"])
     degree_level: str = Field(..., examples=["Masters"])
     field_of_study: str | None = Field(None, examples=["Computer Science"])
     passout_year: int | None = Field(None, examples=[2024])
@@ -23,9 +24,9 @@ class ProfileBase(BaseModel):
     resume_format: Literal["EuroPass", "Normal"] | None = Field(None, examples=["Normal"])
     @field_validator("country", "target_country")
     @classmethod
-    def validate_country(cls, value: str) -> str:
-        if value == "":
-            return value
+    def validate_country(cls, value: str | None) -> str | None:
+        if value is None or value == "":
+            return None
         if value not in COUNTRIES:
             raise ValueError("Select a valid country from the list.")
         return value
@@ -50,9 +51,8 @@ class ProfileCreate(ProfileBase):
     @field_validator("resume_url")
     @classmethod
     def validate_resume_url(cls, value: HttpUrl | None) -> HttpUrl | None:
-        if value is not None:
-            if "drive.google.com" not in str(value):
-                raise ValueError("Only Google Drive links (drive.google.com) are allowed for resumes.")
+        if value is not None and urlparse(str(value)).hostname != "drive.google.com":
+            raise ValueError("Only Google Drive links (drive.google.com) are allowed for resumes.")
         return value
 
     @model_validator(mode="after")
@@ -66,7 +66,7 @@ class ProfileCreate(ProfileBase):
 
 
 class ProfileRead(ProfileBase):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = {"from_attributes": True}
 
     id: int | None = None
     educations: list[EducationRead] = Field(default_factory=list)

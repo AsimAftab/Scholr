@@ -19,7 +19,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { updateAccountSettings, createProfile } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { Profile, DegreeLevel } from "@/lib/types";
+import { Profile } from "@/lib/types";
 import { COUNTRIES } from "@/lib/countries";
 import { editProfileSchema, changePasswordSchema, zodErrors } from "@/lib/validation";
 
@@ -109,7 +109,7 @@ export default function SettingsPage() {
       // Supply required fields if creating a new profile from the Settings page
       if (!user.profile) {
         profilePayload.target_country = "";
-        profilePayload.degree_level = "" as unknown as DegreeLevel;
+        profilePayload.degree_level = "Masters";
         profilePayload.field_of_study = "";
       }
 

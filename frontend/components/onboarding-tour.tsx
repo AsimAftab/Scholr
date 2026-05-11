@@ -44,10 +44,7 @@ export function OnboardingTour() {
   const startedRef = useRef(false);
 
   useEffect(() => {
-    // Expose global method to advance tour from external components (like profile form success)
-    (window as any).__advanceScholrTour = () => {
-      if (tourRef.current) tourRef.current.next();
-    };
+    // Wait for the Dashboard to render
 
     if (loading || !user || user.onboarding_completed || user.role === "admin") return;
     if (startedRef.current) return;
@@ -132,8 +129,13 @@ export function OnboardingTour() {
             classes: 'shepherd-button-primary',
             action: async () => {
               router.push("/settings");
-              await waitForElement("#settings-personal-card");
-              tour.next();
+              try {
+                await waitForElement("#settings-personal-card");
+                tour.next();
+              } catch {
+                showToast("Navigation took too long. Resuming tour...", "error");
+                tour.next();
+              }
             }
           }
         ]
@@ -151,8 +153,13 @@ export function OnboardingTour() {
             classes: 'shepherd-button-secondary',
             action: async () => {
               router.push("/dashboard");
-              await waitForElement('[data-tour-id="nav-settings"]');
-              tour.back();
+              try {
+                await waitForElement('[data-tour-id="nav-settings"]');
+                tour.back();
+              } catch {
+                showToast("Navigation took too long. Resuming tour...", "error");
+                tour.back();
+              }
             }
           },
           nextButton
@@ -172,8 +179,13 @@ export function OnboardingTour() {
             classes: 'shepherd-button-primary',
             action: async () => {
               router.push("/profile");
-              await waitForElement("#profile-history-card");
-              tour.next();
+              try {
+                await waitForElement("#profile-history-card");
+                tour.next();
+              } catch {
+                showToast("Navigation took too long. Resuming tour...", "error");
+                tour.next();
+              }
             }
           }
         ]
@@ -200,8 +212,13 @@ export function OnboardingTour() {
             classes: 'shepherd-button-secondary',
             action: async () => {
               router.push("/settings");
-              await waitForElement('[data-tour-id="nav-academic-info"]');
-              tour.back();
+              try {
+                await waitForElement('[data-tour-id="nav-academic-info"]');
+                tour.back();
+              } catch {
+                showToast("Navigation took too long. Resuming tour...", "error");
+                tour.back();
+              }
             }
           },
           {
@@ -210,8 +227,42 @@ export function OnboardingTour() {
             action: () => {
               const submitBtn = document.querySelector<HTMLButtonElement>('#profile-form-wrapper button[type="submit"]');
               if (submitBtn) {
-                // Click the hidden or visible submit button. 
-                // We DO NOT call tour.next() here. It will be called by the page.tsx on success!
+                let handled = false;
+                
+                const handleSuccess = () => {
+                  if (handled) return;
+                  handled = true;
+                  cleanup();
+                  tour.next();
+                };
+                
+                const handleFailure = () => {
+                  if (handled) return;
+                  handled = true;
+                  cleanup();
+                  tour.cancel();
+                  showToast("Profile save failed or validation error. Please fix and try again.", "error");
+                };
+
+                const cleanup = () => {
+                  window.removeEventListener("profile-saved", handleSuccess);
+                  window.removeEventListener("profile-save-failed", handleFailure);
+                  clearTimeout(timeoutId);
+                };
+
+                window.addEventListener("profile-saved", handleSuccess);
+                window.addEventListener("profile-save-failed", handleFailure);
+
+                // 10s timeout fallback
+                const timeoutId = setTimeout(() => {
+                  if (!handled) {
+                    handled = true;
+                    cleanup();
+                    tour.cancel();
+                    showToast("Profile save timed out. Please check your connection and try again.", "error");
+                  }
+                }, 10000);
+
                 submitBtn.click();
               } else {
                 tour.next();
@@ -265,7 +316,7 @@ export function OnboardingTour() {
         tourRef.current.cancel();
         tourRef.current = null;
       }
-      delete (window as any).__advanceScholrTour;
+      // Global cleanup
     };
   }, []);
 
