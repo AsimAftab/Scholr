@@ -15,7 +15,7 @@ class ProfileService:
         profile_data = payload.model_dump(exclude={"educations", "work_experiences"})
         if profile_data.get("resume_url") is not None:
             profile_data["resume_url"] = str(profile_data["resume_url"])
-            
+
         education_data = payload.educations
         work_experience_data = payload.work_experiences
 

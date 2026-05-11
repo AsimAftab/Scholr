@@ -235,7 +235,7 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
   // Tab config
   const goalsFields = ["country", "target_country", "degree_level", "field_of_study"];
   const historyFields = ["passout_year", "gpa", "ielts_score"];
-  const docsFields = ["resume_url"];
+  const docsFields = ["resume_url", "resume_is_accessible", "resume_format"];
 
   return (
     <form
@@ -294,6 +294,9 @@ export function ProfileForm({ initialValue, onSubmit, loading }: ProfileFormProp
           } else {
             setFormError("An unexpected error occurred while validating the profile.");
             console.error(error);
+          }
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("profile-save-failed"));
           }
         }
       }}
