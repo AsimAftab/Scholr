@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Literal
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
 from app.schemas.country_options import COUNTRIES
 from app.schemas.education import EducationCreate, EducationRead
@@ -10,8 +10,8 @@ from app.schemas.work_experience import WorkExperienceCreate, WorkExperienceRead
 
 
 class ProfileBase(BaseModel):
-    country: str | None = Field(None, examples=["Nepal"])
-    target_country: str | None = Field(None, examples=["Canada"])
+    country: str = Field(..., examples=["Nepal"])
+    target_country: str = Field(..., examples=["Canada"])
     degree_level: str = Field(..., examples=["Masters"])
     field_of_study: str | None = Field(None, examples=["Computer Science"])
     passout_year: int | None = Field(None, examples=[2024])
@@ -24,9 +24,9 @@ class ProfileBase(BaseModel):
     resume_format: Literal["EuroPass", "Normal"] | None = Field(None, examples=["Normal"])
     @field_validator("country", "target_country")
     @classmethod
-    def validate_country(cls, value: str | None) -> str | None:
-        if value is None or value == "":
-            return None
+    def validate_country(cls, value: str) -> str:
+        if not value or value.strip() == "":
+            raise ValueError("Country selection is required.")
         if value not in COUNTRIES:
             raise ValueError("Select a valid country from the list.")
         return value

@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_check_constraint(
         "ck_profiles_resume_format",
         "profiles",
-        "resume_format IN ('EuroPass', 'Normal') OR resume_format IS NULL",
+        "resume_format IN ('EuroPass', 'Normal')",
     )
     # ### end Alembic commands ###
 

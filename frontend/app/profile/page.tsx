@@ -96,7 +96,7 @@ export default function ProfilePage() {
               }
             } catch (saveError) {
               setError(saveError instanceof Error ? saveError.message : "Unable to save your profile.");
-              if (typeof window !== "undefined") {
+              if (isMounted.current && typeof window !== "undefined") {
                 window.dispatchEvent(new CustomEvent("profile-save-failed"));
               }
             } finally {
