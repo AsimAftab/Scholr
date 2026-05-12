@@ -42,6 +42,7 @@ export function OnboardingTour() {
   const { showToast } = useToast();
   const tourRef = useRef<any>(null);
   const startedRef = useRef(false);
+  const systemFailureRef = useRef(false);
 
   useEffect(() => {
     // Wait for the Dashboard to render
@@ -69,6 +70,7 @@ export function OnboardingTour() {
       });
 
       tour.on('cancel', async () => {
+        if (systemFailureRef.current) return;
         try {
           await handleCompleteOnboarding();
         } catch (error) {
@@ -133,8 +135,9 @@ export function OnboardingTour() {
                 await waitForElement("#settings-personal-card");
                 tour.next();
               } catch {
-                showToast("Navigation took too long. Resuming tour...", "error");
-                tour.next();
+                systemFailureRef.current = true;
+                tour.cancel();
+                showToast("The settings page took too long to load. Please refresh and try again.", "error");
               }
             }
           }
@@ -157,8 +160,9 @@ export function OnboardingTour() {
                 await waitForElement('[data-tour-id="nav-settings"]');
                 tour.back();
               } catch {
-                showToast("Navigation took too long. Resuming tour...", "error");
-                tour.back();
+                systemFailureRef.current = true;
+                tour.cancel();
+                showToast("The dashboard took too long to load. Please refresh and try again.", "error");
               }
             }
           },
@@ -183,8 +187,9 @@ export function OnboardingTour() {
                 await waitForElement("#profile-history-card");
                 tour.next();
               } catch {
-                showToast("Navigation took too long. Resuming tour...", "error");
-                tour.next();
+                systemFailureRef.current = true;
+                tour.cancel();
+                showToast("The profile page took too long to load. Please refresh and try again.", "error");
               }
             }
           }
@@ -216,8 +221,9 @@ export function OnboardingTour() {
                 await waitForElement('[data-tour-id="nav-academic-info"]');
                 tour.back();
               } catch {
-                showToast("Navigation took too long. Resuming tour...", "error");
-                tour.back();
+                systemFailureRef.current = true;
+                tour.cancel();
+                showToast("The settings page took too long to load. Please refresh and try again.", "error");
               }
             }
           },
@@ -240,6 +246,7 @@ export function OnboardingTour() {
                   if (handled) return;
                   handled = true;
                   cleanup();
+                  systemFailureRef.current = true;
                   tour.cancel();
                   showToast("Profile save failed or validation error. Please fix and try again.", "error");
                 };
@@ -258,6 +265,7 @@ export function OnboardingTour() {
                   if (!handled) {
                     handled = true;
                     cleanup();
+                    systemFailureRef.current = true;
                     tour.cancel();
                     showToast("Profile save timed out. Please check your connection and try again.", "error");
                   }
